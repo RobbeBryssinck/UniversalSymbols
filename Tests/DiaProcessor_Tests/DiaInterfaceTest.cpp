@@ -46,23 +46,36 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestTypeSymbols)
   {
-    ASSERT_EQ(pUsym->typeSymbols.size(), 470);
+    ASSERT_EQ(pUsym->typeSymbols.size(), 1632);
   }
 
-  TEST_F(DiaInterfaceTest, TestUserTypeSymbol)
+  TEST_F(DiaInterfaceTest, TestUdtClassTypeSymbol)
   {
-    const auto& typeSymbol = pUsym->typeSymbols[403];
-    EXPECT_EQ(typeSymbol.id, 403);
-    EXPECT_EQ(typeSymbol.name, "_IMAGE_OPTIONAL_HEADER64");
-    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kStruct);
-    EXPECT_EQ(typeSymbol.length, 240);
-    EXPECT_EQ(typeSymbol.fieldCount, 30);
+    uint32_t typeSymbolId = 0;
+
+    for (const auto& [id, symbol] : pUsym->typeSymbols)
+    {
+      if (symbol.name == "TestClass1")
+      {
+        typeSymbolId = id;
+        break;
+      }
+    }
+
+    ASSERT_NE(typeSymbolId, 0);
+
+    const auto& typeSymbol = pUsym->typeSymbols[typeSymbolId];
+    EXPECT_EQ(typeSymbol.id, typeSymbolId);
+    EXPECT_EQ(typeSymbol.name, "TestClass1");
+    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kClass);
+    EXPECT_EQ(typeSymbol.length, 8);
+    EXPECT_EQ(typeSymbol.fieldCount, 1);
     EXPECT_EQ(typeSymbol.fieldCount, typeSymbol.fields.size());
     EXPECT_EQ(typeSymbol.typedefSource, 0);
     
     const auto& field = typeSymbol.fields[0];
-    EXPECT_EQ(field.name, "Magic");
-    EXPECT_NE(field.underlyingTypeId, 0);
+    EXPECT_EQ(field.name, "t1");
+    EXPECT_EQ(field.underlyingTypeId, 62);
     EXPECT_EQ(field.offset, 0);
     EXPECT_EQ(field.isAnonymousUnion, false);
     EXPECT_EQ(field.unionId, 0);
@@ -72,9 +85,8 @@ namespace
 
     const auto& underlyingTypeOfField = pUnderlyingTypeOfField->second;
     EXPECT_EQ(underlyingTypeOfField.id, field.underlyingTypeId);
-    EXPECT_EQ(underlyingTypeOfField.name, "uint16_t");
-    EXPECT_EQ(underlyingTypeOfField.type, USYM::TypeSymbol::Type::kBase);
-    EXPECT_EQ(underlyingTypeOfField.length, 2);
+    EXPECT_EQ(underlyingTypeOfField.name, "TestStruct1");
+    EXPECT_EQ(underlyingTypeOfField.fieldCount, 2);
   }
 
 #if 0
