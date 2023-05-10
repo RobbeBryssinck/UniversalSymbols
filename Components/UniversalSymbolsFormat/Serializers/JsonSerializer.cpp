@@ -42,6 +42,8 @@ bool JsonSerializer::SerializeTypeSymbols()
 		symbol["id"] = typeSymbol.id;
 		symbol["name"] = typeSymbol.name;
 		symbol["length"] = typeSymbol.length;
+		symbol["memberVariableCount"] = typeSymbol.memberVariableCount;
+		symbol["memberVariableIds"] = typeSymbol.memberVariableIds;
 		typeSymbols.push_back(symbol);
 	}
 
