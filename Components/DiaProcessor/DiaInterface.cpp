@@ -214,6 +214,73 @@ namespace DiaInterface
     return symbol;
   }
 
+  void CreateMembersForSymbol(USYM& aUsym, IDiaSymbol* apSymbol, USYM::TypeSymbol& aTypeSymbol)
+  {
+    CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
+    if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
+    {
+      LONG fieldCount = 0;
+      pMemberEnum->get_Count(&fieldCount);
+      aTypeSymbol.fieldCount = fieldCount;
+      aTypeSymbol.fields.reserve(aTypeSymbol.fieldCount);
+
+      IDiaSymbol* rgelt = nullptr;
+      ULONG pceltFetched = 0;
+
+      while (SUCCEEDED(pMemberEnum->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+      {
+        CComPtr<IDiaSymbol> pField(rgelt);
+        HRESULT result = 0;
+
+        auto pFieldSymbol = CreateFieldSymbol(aUsym, pField);
+        if (!pFieldSymbol)
+        {
+          spdlog::error("Failed to create field symbol for object {}.", aTypeSymbol.name);
+          // Push empty symbol to make sure the field count is still correct.
+          aTypeSymbol.fields.push_back(USYM::FieldSymbol());
+          continue;
+        }
+
+        aTypeSymbol.fields.push_back(*pFieldSymbol);
+      }
+
+      assert(aTypeSymbol.fieldCount == aTypeSymbol.fields.size());
+
+      if (aTypeSymbol.type != USYM::TypeSymbol::Type::kUnion)
+      {
+        auto count = aTypeSymbol.fields.size();
+        uint32_t unionId = 0;
+        bool wasLastUnion = false;
+
+        for (size_t i = 0; i < count; i++)
+        {
+          if (i + 1 == count)
+            break;
+
+          auto& current = aTypeSymbol.fields[i];
+          if (current.id == 0)
+            continue;
+
+          auto& next = aTypeSymbol.fields[i + 1];
+          if (next.id == 0)
+            continue;
+
+          if (current.offset == next.offset)
+          {
+            current.isAnonymousUnion = next.isAnonymousUnion = true;
+            current.unionId = next.unionId = unionId;
+            wasLastUnion = true;
+          }
+          else if (wasLastUnion)
+          {
+            unionId++;
+            wasLastUnion = false;
+          }
+        }
+      }
+    }
+  }
+
   std::optional<USYM::TypeSymbol> CreateUDTSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
@@ -252,69 +319,7 @@ namespace DiaInterface
       return std::nullopt;
     symbol.length = length;
 
-    CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
-    if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
-    {
-      LONG fieldCount = 0;
-      pMemberEnum->get_Count(&fieldCount);
-      symbol.fieldCount = fieldCount;
-      symbol.fields.reserve(symbol.fieldCount);
-
-      IDiaSymbol* rgelt = nullptr;
-      ULONG pceltFetched = 0;
-
-      while (SUCCEEDED(pMemberEnum->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
-      {
-        CComPtr<IDiaSymbol> pField(rgelt);
-        HRESULT result = 0;
-
-        auto pFieldSymbol = CreateFieldSymbol(aUsym, pField);
-        if (!pFieldSymbol)
-        {
-          spdlog::error("Failed to create field symbol for object {}.", symbol.name);
-          // Push empty symbol to make sure the field count is still correct.
-          symbol.fields.push_back(USYM::FieldSymbol());
-          continue;
-        }
-
-        symbol.fields.push_back(*pFieldSymbol);
-      }
-
-      assert(symbol.fieldCount == symbol.fields.size());
-
-      if (symbol.type != USYM::TypeSymbol::Type::kUnion)
-      {
-        auto count = symbol.fields.size();
-        uint32_t unionId = 0;
-        bool wasLastUnion = false;
-
-        for (size_t i = 0; i < count; i++)
-        {
-          if (i + 1 == count)
-            break;
-
-          auto& current = symbol.fields[i];
-          if (current.id == 0)
-            continue;
-
-          auto& next = symbol.fields[i + 1];
-          if (next.id == 0)
-            continue;
-
-          if (current.offset == next.offset)
-          {
-            current.isAnonymousUnion = next.isAnonymousUnion = true;
-            current.unionId = next.unionId = unionId;
-            wasLastUnion = true;
-          }
-          else if (wasLastUnion)
-          {
-            unionId++;
-            wasLastUnion = false;
-          }
-        }
-      }
-    }
+    CreateMembersForSymbol(aUsym, apSymbol, symbol);
 
     return symbol;
   }
@@ -335,6 +340,8 @@ namespace DiaInterface
     if (apSymbol->get_length(&length) != S_OK)
       return std::nullopt;
     symbol.length = length;
+
+    CreateMembersForSymbol(aUsym, apSymbol, symbol);
 
     return symbol;
   }

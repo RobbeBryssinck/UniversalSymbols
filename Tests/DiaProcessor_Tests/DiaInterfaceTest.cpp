@@ -89,29 +89,32 @@ namespace
     EXPECT_EQ(underlyingTypeOfField.fieldCount, 2);
   }
 
-#if 0
   TEST_F(DiaInterfaceTest, TestEnumTypeSymbols)
   {
-    for (auto& [id, symbol] : pUsym->typeSymbols)
-    {
-      if (symbol.type == USYM::TypeSymbol::Type::kEnum)
-        DebugBreak();
+    uint32_t typeSymbolId = 0;
 
-      if (symbol.id == id)
-        symbol.id = id;
+    for (const auto& [id, symbol] : pUsym->typeSymbols)
+    {
+      if (symbol.name == "TestEnum1")
+      {
+        typeSymbolId = id;
+        break;
+      }
     }
 
-    const auto& typeSymbol = pUsym->typeSymbols[403];
-    EXPECT_EQ(typeSymbol.id, 403);
-    EXPECT_EQ(typeSymbol.name, "_IMAGE_OPTIONAL_HEADER64");
-    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kStruct);
-    EXPECT_EQ(typeSymbol.length, 240);
-    EXPECT_EQ(typeSymbol.fieldCount, 30);
+    ASSERT_NE(typeSymbolId, 0);
+
+    const auto& typeSymbol = pUsym->typeSymbols[typeSymbolId];
+    EXPECT_EQ(typeSymbol.id, typeSymbolId);
+    EXPECT_EQ(typeSymbol.name, "TestEnum1");
+    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kEnum);
+    EXPECT_EQ(typeSymbol.length, 4);
+    EXPECT_EQ(typeSymbol.fieldCount, 3);
     EXPECT_EQ(typeSymbol.fieldCount, typeSymbol.fields.size());
     EXPECT_EQ(typeSymbol.typedefSource, 0);
 
     const auto& field = typeSymbol.fields[0];
-    EXPECT_EQ(field.name, "Magic");
+    EXPECT_EQ(field.name, "kTestA");
     EXPECT_NE(field.underlyingTypeId, 0);
     EXPECT_EQ(field.offset, 0);
     EXPECT_EQ(field.isAnonymousUnion, false);
@@ -122,9 +125,8 @@ namespace
 
     const auto& underlyingTypeOfField = pUnderlyingTypeOfField->second;
     EXPECT_EQ(underlyingTypeOfField.id, field.underlyingTypeId);
-    EXPECT_EQ(underlyingTypeOfField.name, "uint16_t");
+    EXPECT_EQ(underlyingTypeOfField.name, "int32_t");
     EXPECT_EQ(underlyingTypeOfField.type, USYM::TypeSymbol::Type::kBase);
-    EXPECT_EQ(underlyingTypeOfField.length, 2);
+    EXPECT_EQ(underlyingTypeOfField.length, 4);
   }
-#endif
 }
