@@ -8,7 +8,7 @@
 
 #include <stdexcept>
 #include <memory>
-#include <set>
+#include <unordered_set>
 
 namespace DiaInterface
 {
@@ -16,7 +16,7 @@ namespace DiaInterface
 	static CComPtr<IDiaDataSource> s_pDataSource = nullptr;
 	static CComPtr<IDiaSymbol> s_pGlobalScopeSymbol = nullptr;
 
-	static std::set<uint32_t> s_symbolIndexIds{};
+	static std::unordered_set<uint32_t> s_symbolIndexIds{};
 
 	void Release()
 	{
@@ -296,7 +296,15 @@ namespace DiaInterface
 
 					if (!DoesSymbolExist(returnTypeId))
 					{
-						//spdlog::error("Unknown return type");
+						auto result = CreateTypeSymbol(pReturnType);
+						if (!result)
+						{
+							DWORD symTag = 0;
+							pReturnType->get_symTag(&symTag);
+							spdlog::error("Failed to create return type symbol {}.", symTag);
+						}
+						else
+							aUsym.typeSymbols.push_back(*result);
 					}
 				}
 
@@ -326,11 +334,12 @@ namespace DiaInterface
 							auto result = CreateTypeSymbol(pArgumentType);
 							if (!result)
 								spdlog::error("Failed to create argument type symbol.");
-
-							aUsym.typeSymbols.push_back(*result);
+							else
+							{
+								aUsym.typeSymbols.push_back(*result);
+								symbol.argumentTypeIds.push_back(argTypeId);
+							}
 						}
-
-						symbol.argumentTypeIds.push_back(argTypeId);
 					}
 				}
 
@@ -414,6 +423,8 @@ namespace DiaInterface
 			BuildBaseTypeList(usym);
 			BuildUserDefinedTypeList(usym);
 			BuildFunctionList(usym);
+			// TODO: enum and pointers
+			// TODO: reduce duplicates
 
 			return usym;
 		}

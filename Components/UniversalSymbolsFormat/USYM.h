@@ -42,6 +42,11 @@ struct USYM
   // TODO: UDT might be a better name for it.
   struct TypeSymbol : public Symbol
   {
+    bool IsDuplicate(const TypeSymbol& aOther) const
+    {
+      return length == aOther.length && name == aOther.name;
+    }
+
     uint64_t length{};
   };
 
