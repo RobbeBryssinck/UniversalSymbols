@@ -42,14 +42,18 @@ struct USYM
   // TODO: have child classes for TypeSymbol (enum, UDT, ptr, etc.), and assign them to different vectors
   struct TypeSymbol : public Symbol
   {
-    bool IsDuplicate(const TypeSymbol& aOther) const
+    bool operator==(const TypeSymbol& aOther) const
     {
-      return length == aOther.length && name == aOther.name;
+      return
+        length == aOther.length
+        && memberVariableCount == aOther.memberVariableCount
+        && name == aOther.name
+        && memberVariableIds == aOther.memberVariableIds;
     }
 
     uint64_t length{};
     uint64_t memberVariableCount{};
-    std::vector<uint64_t> memberVariableIds{};
+    std::vector<uint32_t> memberVariableIds{};
   };
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
@@ -79,8 +83,12 @@ struct USYM
 
   ISerializer::SerializeResult Serialize(const char* apOutputFileNoExtension);
 
+private:
+  void PurgeDuplicateTypes();
+
   std::unique_ptr<ISerializer> pSerializer = nullptr;
 
+public:
   Header header{};
   std::vector<TypeSymbol> typeSymbols{};
   std::vector<FunctionSymbol> functionSymbols{};

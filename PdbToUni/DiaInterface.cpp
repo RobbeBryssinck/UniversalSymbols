@@ -363,7 +363,6 @@ namespace DiaInterface
     return true;
   }
 
-  // TODO: duplicate symbols?
   void BuildTypeList(USYM& aUsym, enum SymTagEnum aType)
   {
     CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
@@ -589,7 +588,6 @@ namespace DiaInterface
       BuildTypeList(usym, SymTagEnum);
       BuildTypeList(usym, SymTagTypedef);
       BuildTypeList(usym, SymTagPointerType);
-      // TODO: reduce duplicates
 
       BuildFunctionList(usym);
 
