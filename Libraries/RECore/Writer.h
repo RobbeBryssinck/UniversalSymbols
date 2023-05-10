@@ -11,7 +11,7 @@ class Writer final : public Buffer
 {
 public:
   Writer();
-  Writer(const size_t acInitialSize);
+  Writer(size_t acInitialSize);
 
   bool WriteToFile(const std::string& acFilename);
 

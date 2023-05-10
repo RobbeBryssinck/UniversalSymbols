@@ -11,8 +11,11 @@ Writer::Writer()
   size = initialSize;
 }
 
-Writer::Writer(const size_t acInitialSize)
+Writer::Writer(size_t acInitialSize)
 {
+  if (acInitialSize < 1)
+    acInitialSize = 1;
+
   pData = std::make_unique<uint8_t[]>(acInitialSize);
   size = acInitialSize;
 }
@@ -32,7 +35,7 @@ bool Writer::WriteToFile(const std::string& acFilename)
     return false;
   }
 
-  file.write(reinterpret_cast<const char*>(const_cast<const uint8_t*>(pData.get())), size);
+  file.write(reinterpret_cast<const char*>(const_cast<const uint8_t*>(pData.get())), position+1);
 
   return true;
 }
@@ -41,11 +44,17 @@ bool Writer::WriteImpl(const void* apSource, const size_t acLength)
 {
   if (IsOverflow(acLength))
   {
-    size_t newLength = size + acLength;
-    if (acLength < 1024)
-      newLength = size + 1024;
+    // Resize 10% of the currrent size, or double if 10% is 0.
+    const size_t oldSize = size;
+    
+    size_t newSize = size + size * 0.1;
+    if (newSize == size)
+      newSize = size * 2;
 
-    Resize(newLength);
+    if (newSize < oldSize + acLength)
+      newSize = oldSize + acLength;
+
+    Resize(newSize);
   }
 
   std::memcpy(GetDataAtPosition(), apSource, acLength);

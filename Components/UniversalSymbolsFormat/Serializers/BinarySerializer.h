@@ -15,5 +15,6 @@ protected:
 	bool SerializeFunctionSymbols() override;
 	bool WriteToFile() override;
 
-	Writer writer{};
+	// 1MB should cover most symbols.
+	Writer writer{ 1000000000 };
 };
