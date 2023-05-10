@@ -6,5 +6,8 @@ project "UniversalSymbolsFormat"
 
    includedirs 
    {
-      "../../Vendor/spdlog/include"
+      "../../Vendor/spdlog/include",
+      "../../Libraries/RECore"
    }
+
+   links "RECore"

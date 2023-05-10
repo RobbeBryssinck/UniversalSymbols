@@ -20,3 +20,4 @@ project "PdbToUni"
 
    links "UniversalSymbolsFormat"
    links "diaguids"
+   links "RECore"
