@@ -4,6 +4,8 @@ workspace "UniversalSymbols"
    architecture "x64"
    configurations { "Debug", "Release" }
 
+   startproject "PdbToUni"
+
    cppdialect "C++20"
 
    defines { "NOMINMAX" }
@@ -21,6 +23,7 @@ workspace "UniversalSymbols"
    targetdir ("Build/Bin/%{cfg.longname}")
    objdir ("Build/Obj/%{cfg.longname}")
 
-include("UniversalSymbolsFormat")
+include("Libraries")
+include("Components")
 include("PdbToUni")
 include("DwarfToUni")

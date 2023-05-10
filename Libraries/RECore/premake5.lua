@@ -1,4 +1,4 @@
-project "UniversalSymbolsFormat"
+project "RECore"
    kind "StaticLib"
    language "C++"
 
@@ -6,4 +6,5 @@ project "UniversalSymbolsFormat"
 
    includedirs 
    {
+      "../../Vendor/spdlog/include"
    }

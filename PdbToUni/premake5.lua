@@ -1,3 +1,4 @@
+group "Apps"
 project "PdbToUni"
    kind "ConsoleApp"
    language "C++"
@@ -6,10 +7,13 @@ project "PdbToUni"
 
    includedirs 
    {
-      "../UniversalSymbolsFormat",
+      "../Components",
+      "../Vendor/spdlog/include"
    }
 
    libdirs
    {
       "../Build/Bin/%{cfg.longname}"
    }
+
+   links "UniversalSymbolsFormat"

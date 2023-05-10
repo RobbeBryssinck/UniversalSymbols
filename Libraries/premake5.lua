@@ -1,0 +1,2 @@
+group "Libraries"
+include("RECore")
