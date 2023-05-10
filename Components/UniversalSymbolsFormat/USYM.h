@@ -119,6 +119,7 @@ struct USYM
 
 private:
   void PurgeDuplicateTypes();
+  bool VerifyTypeIds();
 
   std::unique_ptr<ISerializer> pSerializer = nullptr;
 

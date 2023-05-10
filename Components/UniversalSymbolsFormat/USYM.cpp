@@ -31,6 +31,8 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
 
   pSerializer->Setup(apOutputFileNoExtension, this);
 
+  VerifyTypeIds();
+
   spdlog::info("Type symbol count before: {}", typeSymbols.size());
 
   PurgeDuplicateTypes();
@@ -38,6 +40,7 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
   spdlog::info("Type symbol count after: {}", typeSymbols.size());
 
   // TODO: write verification function that checks if all ids exist
+  VerifyTypeIds();
 
   return pSerializer->SerializeToFile();
 }
@@ -95,4 +98,42 @@ void USYM::PurgeDuplicateTypes()
     auto const& [id, symbol] = item;
     return oldToNew.contains(id);
   });
+}
+
+// TODO: why are some return types null?
+bool USYM::VerifyTypeIds()
+{
+  bool purity = true;
+
+  for (const auto& [id, symbol] : functionSymbols)
+  {
+    if (symbol.returnTypeId != 0 && typeSymbols.find(symbol.returnTypeId) == typeSymbols.end())
+    {
+      purity = false;
+      spdlog::warn("Return type id of function {} not found: {}", symbol.id, symbol.returnTypeId);
+    }
+
+    for (const auto argumentTypeId : symbol.argumentTypeIds)
+    {
+      if (argumentTypeId != 0 && typeSymbols.find(argumentTypeId) == typeSymbols.end())
+      {
+        purity = false;
+        spdlog::warn("Argument type id of function {} not found: {}", symbol.id, argumentTypeId);
+      }
+    }
+  }
+
+  for (const auto& [id, symbol] : typeSymbols)
+  {
+    for (const auto& fieldSymbol : symbol.fields)
+    {
+      if (fieldSymbol.underlyingTypeId != 0 && typeSymbols.find(fieldSymbol.underlyingTypeId) == typeSymbols.end())
+      {
+        purity = false;
+        spdlog::warn("Field type id of type {} not found: {}", id, fieldSymbol.underlyingTypeId);
+      }
+    }
+  }
+
+  return purity;
 }
