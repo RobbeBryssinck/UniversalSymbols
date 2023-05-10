@@ -12,7 +12,6 @@ public:
 protected:
 	bool SerializeHeader() override;
 	bool SerializeTypeSymbols() override;
-	bool SerializeEnumSymbols() override;
 	bool SerializeFunctionSymbols() override;
 	bool WriteToFile() override;
 

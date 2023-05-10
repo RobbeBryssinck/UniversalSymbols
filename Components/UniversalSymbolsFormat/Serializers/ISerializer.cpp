@@ -16,9 +16,6 @@ ISerializer::SerializeResult ISerializer::SerializeToFile()
 	if (!SerializeTypeSymbols())
 		return SR::kTypeSymbolsFailed;
 
-	if (!SerializeEnumSymbols())
-		return SR::kEnumSymbolsFailed;
-
 	if (!SerializeFunctionSymbols())
 		return SR::kFunctionSymbolsFailed;
 

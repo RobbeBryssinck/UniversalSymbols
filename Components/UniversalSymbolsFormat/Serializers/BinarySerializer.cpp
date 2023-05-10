@@ -37,21 +37,6 @@ bool BinarySerializer::SerializeTypeSymbols()
 	return true;
 }
 
-bool BinarySerializer::SerializeEnumSymbols()
-{
-	const size_t symbolCount = pUsym->enumSymbols.size();
-	writer.Write(symbolCount);
-
-	for (const auto& enumSymbol : pUsym->enumSymbols)
-	{
-		writer.Write(enumSymbol.id);
-		writer.WriteString(enumSymbol.name);
-		writer.Write(enumSymbol.length);
-	}
-
-	return true;
-}
-
 bool BinarySerializer::SerializeFunctionSymbols()
 {
 	const size_t symbolCount = pUsym->functionSymbols.size();
