@@ -15,10 +15,13 @@ private:
   float b;
 };
 
+typedef int* pInt;
+
 class TestClass1
 {
 public:
   TestStruct1 t1;
+  pInt p;
 };
 
 int main(int argc, char** argv)

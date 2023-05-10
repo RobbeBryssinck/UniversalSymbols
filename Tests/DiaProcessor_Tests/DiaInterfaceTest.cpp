@@ -46,7 +46,7 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestTypeSymbols)
   {
-    ASSERT_EQ(pUsym->typeSymbols.size(), 1632);
+    ASSERT_EQ(pUsym->typeSymbols.size(), 1634);
   }
 
   TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)
@@ -117,5 +117,22 @@ namespace
     EXPECT_EQ(underlyingTypeOfField.name, "int32_t");
     EXPECT_EQ(underlyingTypeOfField.type, USYM::TypeSymbol::Type::kBase);
     EXPECT_EQ(underlyingTypeOfField.length, 4);
+  }
+
+  TEST_F(DiaInterfaceTest, TestTypedefSymbol)
+  {
+    const auto& typeSymbol = pUsym->GetTypeSymbolByName("pInt");
+
+    ASSERT_NE(typeSymbol.id, 0);
+
+    EXPECT_EQ(typeSymbol.name, "pInt");
+    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kTypedef);
+    EXPECT_EQ(typeSymbol.length, 8);
+
+    const auto pUnderlyingType = pUsym->typeSymbols.find(typeSymbol.typedefSource);
+    ASSERT_NE(pUnderlyingType, pUsym->typeSymbols.end());
+
+    const auto& underlyingType = pUnderlyingType->second;
+    EXPECT_EQ(underlyingType.type, USYM::TypeSymbol::Type::kPointer);
   }
 }
