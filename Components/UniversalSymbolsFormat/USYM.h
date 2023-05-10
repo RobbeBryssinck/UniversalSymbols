@@ -39,6 +39,7 @@ struct USYM
     std::string name{};
   };
 
+  // TODO: UDT might be a better name for it.
   struct TypeSymbol : public Symbol
   {
     uint64_t length{};
