@@ -246,7 +246,7 @@ namespace DiaInterface
 
       assert(aTypeSymbol.fieldCount == aTypeSymbol.fields.size());
 
-      if (aTypeSymbol.type != USYM::TypeSymbol::Type::kUnion)
+      if (aTypeSymbol.type != USYM::TypeSymbol::Type::kUnion && aTypeSymbol.type != USYM::TypeSymbol::Type::kEnum)
       {
         auto count = aTypeSymbol.fields.size();
         uint32_t unionId = 0;
