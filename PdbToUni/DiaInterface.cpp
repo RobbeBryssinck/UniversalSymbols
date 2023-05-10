@@ -302,8 +302,11 @@ namespace DiaInterface
 
         auto result = CreateTypeSymbol(pType);
         if (!result)
+        {
           spdlog::error("Failed to create base type symbol.");
-
+          continue;
+        }
+          
         aUsym.typeSymbols.push_back(*result);
       }
     }
@@ -323,7 +326,10 @@ namespace DiaInterface
 
         auto result = CreateTypeSymbol(pType);
         if (!result)
+        {
           spdlog::error("Failed to create user defined type symbol.");
+          continue;
+        }
 
         aUsym.typeSymbols.push_back(*result);
       }
@@ -344,8 +350,11 @@ namespace DiaInterface
 
         auto result = CreateTypeSymbol(pType);
         if (!result)
+        {
           spdlog::error("Failed to create enum symbol.");
-
+          continue;
+        }
+        
         aUsym.typeSymbols.push_back(*result);
       }
     }
@@ -365,8 +374,11 @@ namespace DiaInterface
 
         auto result = CreateTypeSymbol(pType);
         if (!result)
+        {
           spdlog::error("Failed to create pointer type symbol.");
-
+          continue;
+        }
+        
         aUsym.typeSymbols.push_back(*result);
       }
     }
@@ -387,7 +399,10 @@ namespace DiaInterface
 
         auto result = CreateTypeSymbol(pType);
         if (!result)
+        {
           spdlog::error("Failed to create typedef symbol.");
+          continue;
+        }
 
         aUsym.typeSymbols.push_back(*result);
       }
