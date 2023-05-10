@@ -30,6 +30,19 @@ namespace
     return *typeSymbolResult;
   }
 
+  std::optional<const nlohmann::json> GetJsonFunctionSymbolByName(std::shared_ptr<const nlohmann::json> apJson, const char* apName)
+  {
+    const auto& functionSymbols = *apJson->find("functionSymbols");
+
+    for (const auto& functionSymbol : functionSymbols)
+    {
+      if (functionSymbol["name"] == apName)
+        return functionSymbol;
+    }
+
+    return std::nullopt;
+  }
+
   class JsonSerializerTest : public ::testing::Test
   {
   public:
@@ -161,16 +174,14 @@ namespace
     EXPECT_EQ(underlyingType["type"], USYM::TypeSymbol::Type::kPointer);
   }
 
-#if 0
   TEST_F(JsonSerializerTest, TestFunctionSymbol)
   {
-    const auto& functionSymbol = pUsym->GetFunctionSymbolByName("PrintTestClass");
+    const auto functionSymbolResult = GetJsonFunctionSymbolByName(pJson, "PrintTestClass");
+    ASSERT_TRUE(functionSymbolResult.has_value());
 
-    ASSERT_NE(functionSymbol.id, 0);
-
-    EXPECT_EQ(functionSymbol.name, "PrintTestClass");
-    EXPECT_NE(functionSymbol.returnTypeId, 0);
-    EXPECT_EQ(functionSymbol.argumentCount, 1);
+    const auto& functionSymbol = functionSymbolResult.value();
+    EXPECT_EQ(functionSymbol["name"], "PrintTestClass");
+    EXPECT_NE(functionSymbol["returnTypeId"], 0);
+    EXPECT_EQ(functionSymbol["argumentCount"], 1);
   }
-#endif
 }
