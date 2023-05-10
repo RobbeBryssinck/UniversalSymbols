@@ -442,28 +442,64 @@ namespace DiaInterface
         if (result == S_OK)
           symbol.argumentCount = argumentCount;
 
-        CComPtr<IDiaEnumSymbols> pEnumArgs = nullptr;
-        if (SUCCEEDED(pFunctionType->findChildren(SymTagFunctionArgType, nullptr, nsNone, &pEnumArgs)) && symbol.name == "rust_sample::test_func5")
+        if (symbol.argumentCount > 0)
         {
-          IDiaSymbol* pCurrentArg = nullptr;
-          ULONG argNum = 0;
-
-          while (SUCCEEDED(pEnumArgs->Next(1, &pCurrentArg, &argNum)) && (argNum == 1))
+          // The 'this' pointer is not included in the FunctionArgType child list.
+          IDiaSymbol* pThis = nullptr;
+          result = pFunctionType->get_objectPointerType(&pThis);
+          if (result == S_OK && pThis)
           {
-            CComPtr<IDiaSymbol> pCurrentArgManaged(pCurrentArg);
+            DWORD thisId = 0;
+            pThis->get_symIndexId(&thisId);
+            symbol.argumentTypeIds.push_back(thisId);
 
-            IDiaSymbol* pArgumentType = nullptr;
-            pCurrentArgManaged->get_type(&pArgumentType);
-            
-            DWORD argTypeId = 0;
-            pArgumentType->get_symIndexId(&argTypeId);
-            symbol.argumentTypeIds.push_back(argTypeId);
-
-            if (!DoesSymbolExist(argTypeId))
+            if (!DoesSymbolExist(thisId))
             {
-              bool result = CreateTypeSymbol(aUsym, pArgumentType);
+              bool result = CreateTypeSymbol(aUsym, pThis);
               if (!result)
-                spdlog::error("Failed to create argument type symbol.");
+                spdlog::error("Failed to create 'this' argument symbol.");
+            }
+          }
+
+          CComPtr<IDiaEnumSymbols> pEnumArgs = nullptr;
+          if (SUCCEEDED(pFunctionType->findChildren(SymTagFunctionArgType, nullptr, nsNone, &pEnumArgs)))
+          {
+            IDiaSymbol* pCurrentArg = nullptr;
+            ULONG argNum = 0;
+
+            int position = 0;
+
+            while (SUCCEEDED(pEnumArgs->Next(1, &pCurrentArg, &argNum)) && (argNum == 1))
+            {
+              CComPtr<IDiaSymbol> pCurrentArgManaged(pCurrentArg);
+
+              IDiaSymbol* pArgumentType = nullptr;
+              pCurrentArgManaged->get_type(&pArgumentType);
+
+              // Weird edge case where some functions have a stub parameter (particularly dtors it seems).
+              // Do note that variable argument functions use bNoType as the final parameter, hence the position check.
+              DWORD symTag = 0;
+              pArgumentType->get_symTag(&symTag);
+              if (symTag == SymTagBaseType)
+              {
+                DWORD baseType = 0;
+                pArgumentType->get_baseType(&baseType);
+                if (baseType == btNoType && position == 0)
+                  continue;
+              }
+
+              DWORD argTypeId = 0;
+              pArgumentType->get_symIndexId(&argTypeId);
+              symbol.argumentTypeIds.push_back(argTypeId);
+
+              if (!DoesSymbolExist(argTypeId))
+              {
+                bool result = CreateTypeSymbol(aUsym, pArgumentType);
+                if (!result)
+                  spdlog::error("Failed to create argument type symbol.");
+              }
+
+              position++;
             }
           }
         }
