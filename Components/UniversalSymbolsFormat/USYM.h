@@ -39,7 +39,7 @@ struct USYM
     std::string name{};
   };
 
-  // TODO: UDT might be a better name for it.
+  // TODO: have child classes for TypeSymbol (enum, UDT, ptr, etc.), and assign them to different vectors
   struct TypeSymbol : public Symbol
   {
     bool IsDuplicate(const TypeSymbol& aOther) const

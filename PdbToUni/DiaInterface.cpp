@@ -183,6 +183,23 @@ namespace DiaInterface
 		return symbol;
 	}
 
+	std::optional<USYM::TypeSymbol> CreateEnumSymbol(IDiaSymbol* apSymbol)
+	{
+		USYM::TypeSymbol symbol{};
+
+		DWORD id = 0;
+		apSymbol->get_symIndexId(&id);
+		symbol.id = id;
+
+		symbol.name = GetNameFromSymbol(apSymbol);
+
+		ULONGLONG length = 0;
+		apSymbol->get_length(&length);
+		symbol.length = length;
+
+		return symbol;
+	}
+
 	std::optional<USYM::TypeSymbol> CreateTypeSymbol(IDiaSymbol* apSymbol)
 	{
 		DWORD symTag = 0;
@@ -200,6 +217,9 @@ namespace DiaInterface
 		case SymTagUDT:
 			symbol = CreateUDTSymbol(apSymbol);
 			break;
+		case SymTagEnum:
+			symbol = CreateEnumSymbol(apSymbol);
+			break;
 		default:
 			symbol = std::nullopt;
 		}
@@ -213,6 +233,7 @@ namespace DiaInterface
 	}
 
 	// TODO: duplicate symbols?
+	// TODO: symplify these builders, lots of duplicate code
 	void BuildBaseTypeList(USYM& aUsym)
 	{
 		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
@@ -238,6 +259,27 @@ namespace DiaInterface
 	{
 		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
 		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagUDT, nullptr, nsNone, &pCurrentSymbol)))
+		{
+			IDiaSymbol* rgelt = nullptr;
+			ULONG pceltFetched = 0;
+
+			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+			{
+				CComPtr<IDiaSymbol> pType(rgelt);
+
+				auto result = CreateTypeSymbol(pType);
+				if (!result)
+					spdlog::error("Failed to create user defined type symbol.");
+
+				aUsym.typeSymbols.push_back(*result);
+			}
+		}
+	}
+
+	void BuildEnumTypeList(USYM& aUsym)
+	{
+		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
+		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagEnum, nullptr, nsNone, &pCurrentSymbol)))
 		{
 			IDiaSymbol* rgelt = nullptr;
 			ULONG pceltFetched = 0;
@@ -422,6 +464,7 @@ namespace DiaInterface
 			BuildHeader(usym);
 			BuildBaseTypeList(usym);
 			BuildUserDefinedTypeList(usym);
+			BuildEnumTypeList(usym);
 			BuildFunctionList(usym);
 			// TODO: enum and pointers
 			// TODO: reduce duplicates
