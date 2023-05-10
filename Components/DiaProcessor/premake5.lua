@@ -6,8 +6,8 @@ project "DiaProcessor"
 
    includedirs 
    {
-      "../../Vendor/spdlog/include",
       "../",
+      "../../Vendor/spdlog/include",
       "../../Vendor/DIASDK/include",
    }
    
