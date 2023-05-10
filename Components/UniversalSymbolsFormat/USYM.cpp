@@ -69,28 +69,22 @@ void USYM::PurgeDuplicateTypes()
     for (auto& field : symbol.fields)
     {
       auto oldNewPair = oldToNew.find(field.underlyingTypeId);
-      if (oldNewPair == oldToNew.end())
-        continue;
-
-      field.underlyingTypeId = oldNewPair->second;
+      if (oldNewPair != oldToNew.end())
+        field.underlyingTypeId = oldNewPair->second;
     }
   }
 
   for (auto& [functionId, function] : functionSymbols)
   {
     auto oldNewPair = oldToNew.find(function.returnTypeId);
-    if (oldNewPair == oldToNew.end())
-      continue;
-
-    function.returnTypeId = oldNewPair->second;
+    if (oldNewPair != oldToNew.end())
+      function.returnTypeId = oldNewPair->second;
 
     for (auto& id : function.argumentTypeIds)
     {
       auto oldNewPair = oldToNew.find(id);
-      if (oldNewPair == oldToNew.end())
-        continue;
-
-      id = oldNewPair->second;
+      if (oldNewPair != oldToNew.end())
+        id = oldNewPair->second;
     }
   }
 
