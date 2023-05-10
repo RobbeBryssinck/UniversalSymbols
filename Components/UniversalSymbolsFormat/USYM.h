@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 struct USYM
 {
@@ -27,8 +28,7 @@ struct USYM
     std::vector<TypeSymbol> arguments{};
   };
 
-  USYM() = delete;
-  USYM(ISerializer::Type aType);
+  void SetSerializer(ISerializer::Type aType);
 
   ISerializer::SerializeResult Serialize();
 
