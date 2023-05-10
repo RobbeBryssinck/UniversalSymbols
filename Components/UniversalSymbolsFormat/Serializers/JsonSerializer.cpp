@@ -50,6 +50,23 @@ bool JsonSerializer::SerializeTypeSymbols()
 	return true;
 }
 
+bool JsonSerializer::SerializeEnumSymbols()
+{
+	json enumSymbols = json::array();
+	for (const auto& enumSymbol : pUsym->enumSymbols)
+	{
+		json symbol = json::object();
+		symbol["id"] = enumSymbol.id;
+		symbol["name"] = enumSymbol.name;
+		symbol["length"] = enumSymbol.length;
+		enumSymbols.push_back(symbol);
+	}
+
+	j["enumSymbols"] = enumSymbols;
+
+	return true;
+}
+
 bool JsonSerializer::SerializeFunctionSymbols()
 {
 	json functionSymbols = json::array();

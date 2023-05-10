@@ -25,6 +25,7 @@ public:
 
 		kHeaderFailed,
 		kTypeSymbolsFailed,
+		kEnumSymbolsFailed,
 		kFunctionSymbolsFailed,
 	};
 
@@ -36,6 +37,7 @@ public:
 protected:
 	virtual bool SerializeHeader() = 0;
 	virtual bool SerializeTypeSymbols() = 0;
+	virtual bool SerializeEnumSymbols() = 0;
 	virtual bool SerializeFunctionSymbols() = 0;
 	virtual bool WriteToFile() = 0;
 

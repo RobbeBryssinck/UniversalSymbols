@@ -50,6 +50,10 @@ struct USYM
     uint64_t length{};
   };
 
+  struct EnumSymbol : public TypeSymbol
+  {
+  };
+
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
   // TODO: MS docs out of date, since there are a lot more values in CV_call_e?
   enum class CallingConvention : uint8_t
@@ -81,5 +85,6 @@ struct USYM
 
   Header header{};
   std::vector<TypeSymbol> typeSymbols{};
+  std::vector<EnumSymbol> enumSymbols{};
   std::vector<FunctionSymbol> functionSymbols{};
 };
