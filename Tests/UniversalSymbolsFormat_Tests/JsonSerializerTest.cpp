@@ -19,6 +19,17 @@ namespace
     return std::nullopt;
   }
 
+  std::optional<const nlohmann::json> GetJsonTypeSymbolById(std::shared_ptr<const nlohmann::json> apJson, int aId)
+  {
+    const auto& typeSymbols = *apJson->find("typeSymbols");
+    const auto& typeSymbolResult = typeSymbols.find(std::to_string(aId));
+
+    if (typeSymbolResult == typeSymbols.end())
+      return std::nullopt;
+
+    return *typeSymbolResult;
+  }
+
   class JsonSerializerTest : public ::testing::Test
   {
   public:
@@ -95,46 +106,45 @@ namespace
     EXPECT_EQ(field["isAnonymousUnion"], false);
     EXPECT_EQ(field["unionId"], 0);
 
-    const auto underlyingTypeOfFieldResult = GetJsonTypeSymbolByName(pJson, field["underlyingTypeId"].get<std::string>().c_str());
+    const auto& underlyingTypeOfFieldResult = GetJsonTypeSymbolById(pJson, field["underlyingTypeId"].get<int>());
     ASSERT_TRUE(underlyingTypeOfFieldResult.has_value());
 
     const auto& underlyingTypeOfField = underlyingTypeOfFieldResult.value();
     EXPECT_EQ(underlyingTypeOfField["id"], field["underlyingTypeId"]);
     EXPECT_EQ(underlyingTypeOfField["name"], "TestStruct1");
+    EXPECT_EQ(underlyingTypeOfField["type"], USYM::TypeSymbol::Type::kStruct);
     EXPECT_EQ(underlyingTypeOfField["fieldCount"], 2);
   }
 
-#if 0
   TEST_F(JsonSerializerTest, TestEnumTypeSymbol)
   {
-    const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestEnum1");
+    const auto typeSymbolResult = GetJsonTypeSymbolByName(pJson, "TestEnum1");
+    ASSERT_TRUE(typeSymbolResult.has_value());
 
-    ASSERT_NE(typeSymbol.id, 0);
+    const auto& typeSymbol = typeSymbolResult.value();
+    EXPECT_EQ(typeSymbol["name"], "TestEnum1");
+    EXPECT_EQ(typeSymbol["type"], USYM::TypeSymbol::Type::kEnum);
+    EXPECT_EQ(typeSymbol["length"], 4);
+    EXPECT_EQ(typeSymbol["fieldCount"], 3);
+    EXPECT_EQ(typeSymbol["typedefSource"], 0);
 
-    EXPECT_EQ(typeSymbol.name, "TestEnum1");
-    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kEnum);
-    EXPECT_EQ(typeSymbol.length, 4);
-    EXPECT_EQ(typeSymbol.fieldCount, 3);
-    EXPECT_EQ(typeSymbol.fieldCount, typeSymbol.fields.size());
-    EXPECT_EQ(typeSymbol.typedefSource, 0);
+    const auto& field = typeSymbol["fields"][0];
+    EXPECT_EQ(field["name"], "kTestA");
+    EXPECT_EQ(field["offset"], 0);
+    EXPECT_EQ(field["isAnonymousUnion"], false);
+    EXPECT_EQ(field["unionId"], 0);
 
-    const auto& field = typeSymbol.fields[0];
-    EXPECT_EQ(field.name, "kTestA");
-    EXPECT_NE(field.underlyingTypeId, 0);
-    EXPECT_EQ(field.offset, 0);
-    EXPECT_EQ(field.isAnonymousUnion, false);
-    EXPECT_EQ(field.unionId, 0);
+    const auto& underlyingTypeOfFieldResult = GetJsonTypeSymbolById(pJson, field["underlyingTypeId"].get<int>());
+    ASSERT_TRUE(underlyingTypeOfFieldResult.has_value());
 
-    const auto pUnderlyingTypeOfField = pUsym->typeSymbols.find(field.underlyingTypeId);
-    ASSERT_NE(pUnderlyingTypeOfField, pUsym->typeSymbols.end());
-
-    const auto& underlyingTypeOfField = pUnderlyingTypeOfField->second;
-    EXPECT_EQ(underlyingTypeOfField.id, field.underlyingTypeId);
-    EXPECT_EQ(underlyingTypeOfField.name, "int32_t");
-    EXPECT_EQ(underlyingTypeOfField.type, USYM::TypeSymbol::Type::kBase);
-    EXPECT_EQ(underlyingTypeOfField.length, 4);
+    const auto& underlyingTypeOfField = underlyingTypeOfFieldResult.value();
+    EXPECT_EQ(underlyingTypeOfField["id"], field["underlyingTypeId"]);
+    EXPECT_EQ(underlyingTypeOfField["name"], "int32_t");
+    EXPECT_EQ(underlyingTypeOfField["type"], USYM::TypeSymbol::Type::kBase);
+    EXPECT_EQ(underlyingTypeOfField["fieldCount"], 0);
   }
 
+#if 0
   TEST_F(JsonSerializerTest, TestTypedefSymbol)
   {
     const auto& typeSymbol = pUsym->GetTypeSymbolByName("pInt");
