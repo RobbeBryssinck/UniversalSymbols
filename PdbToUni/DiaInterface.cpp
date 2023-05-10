@@ -282,7 +282,7 @@ namespace DiaInterface
       return std::nullopt;
     symbol.id = id;
 
-    symbol.name = GeneratePointerName();
+    symbol.name = GetNameFromSymbol(apSymbol);
 
     IDiaSymbol* pUnderlyingType = nullptr;
     if (apSymbol->get_type(&pUnderlyingType) != S_OK)
