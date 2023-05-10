@@ -2,6 +2,10 @@
 
 #include "ELF.h"
 
+#include <spdlog/spdlog.h>
+#include <vector>
+#include <Reader.h>
+
 namespace ElfInterface
 {
 	struct Elf_EhdrEx : public ELF::Elf64_Ehdr
