@@ -24,12 +24,14 @@ public:
 		kFileCreationFailed,
 
 		kHeaderFailed,
+		kTypeSymbolsFailed,
 	};
 
 	virtual ~ISerializer() = default;
 	virtual SerializeResult SerializeToFile() = 0;
 	virtual void Setup(const std::string& aTargetFileName, USYM* apUsym) = 0;
 
+protected:
 	std::string targetFileName{};
 	USYM* pUsym{};
 };

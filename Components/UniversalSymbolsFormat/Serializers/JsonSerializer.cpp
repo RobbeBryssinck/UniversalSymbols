@@ -24,6 +24,9 @@ SR JsonSerializer::SerializeToFile()
 	if (!SerializeHeader())
 		return SR::kHeaderFailed;
 
+	if (!SerializeTypeSymbols())
+		return SR::kTypeSymbolsFailed;
+
 	std::ofstream file(targetFileName);
 	if (file.fail())
 		return SR::kFileCreationFailed;
@@ -36,6 +39,17 @@ SR JsonSerializer::SerializeToFile()
 bool JsonSerializer::SerializeHeader()
 {
 	j["magic"] = pUsym->header.magic;
+
+	return true;
+}
+
+bool JsonSerializer::SerializeTypeSymbols()
+{
+	for (const auto& typeSymbol : pUsym->typeSymbols)
+	{
+		j["id"] = typeSymbol.id;
+		j["name"] = typeSymbol.name;
+	}
 
 	return true;
 }
