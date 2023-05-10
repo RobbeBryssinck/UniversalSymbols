@@ -144,24 +144,24 @@ namespace
     EXPECT_EQ(underlyingTypeOfField["fieldCount"], 0);
   }
 
-#if 0
   TEST_F(JsonSerializerTest, TestTypedefSymbol)
   {
-    const auto& typeSymbol = pUsym->GetTypeSymbolByName("pInt");
+    const auto typeSymbolResult = GetJsonTypeSymbolByName(pJson, "pInt");
+    ASSERT_TRUE(typeSymbolResult.has_value());
 
-    ASSERT_NE(typeSymbol.id, 0);
+    const auto& typeSymbol = typeSymbolResult.value();
+    EXPECT_EQ(typeSymbol["name"], "pInt");
+    EXPECT_EQ(typeSymbol["type"], USYM::TypeSymbol::Type::kTypedef);
+    EXPECT_EQ(typeSymbol["length"], 8);
 
-    EXPECT_EQ(typeSymbol.name, "pInt");
-    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kTypedef);
-    EXPECT_EQ(typeSymbol.length, 8);
+    const auto& underlyingTypeResult = GetJsonTypeSymbolById(pJson, typeSymbol["typedefSource"].get<int>());
+    ASSERT_TRUE(underlyingTypeResult.has_value());
 
-    const auto pUnderlyingType = pUsym->typeSymbols.find(typeSymbol.typedefSource);
-    ASSERT_NE(pUnderlyingType, pUsym->typeSymbols.end());
-
-    const auto& underlyingType = pUnderlyingType->second;
-    EXPECT_EQ(underlyingType.type, USYM::TypeSymbol::Type::kPointer);
+    const auto& underlyingType = underlyingTypeResult.value();
+    EXPECT_EQ(underlyingType["type"], USYM::TypeSymbol::Type::kPointer);
   }
 
+#if 0
   TEST_F(JsonSerializerTest, TestFunctionSymbol)
   {
     const auto& functionSymbol = pUsym->GetFunctionSymbolByName("PrintTestClass");
