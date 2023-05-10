@@ -82,15 +82,15 @@ namespace DiaInterface
 
 			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
 			{
-				CComPtr<IDiaSymbol> pChildSymbol(rgelt);
+				CComPtr<IDiaSymbol> pType(rgelt);
 
 				USYM::TypeSymbol& symbol = aUsym.typeSymbols.emplace_back();
 
 				DWORD id = 0;
-				pChildSymbol->get_symIndexId(&id);
+				pType->get_symIndexId(&id);
 				symbol.id = id;
 
-				symbol.name = GetNameFromSymbol(pChildSymbol);
+				symbol.name = GetNameFromSymbol(pType);
 			}
 		}
 	}
@@ -98,32 +98,77 @@ namespace DiaInterface
 	void BuildFunctionList(USYM& aUsym)
 	{
 		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagPublicSymbol, nullptr, nsNone, &pCurrentSymbol)))
+		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagFunction, nullptr, nsNone, &pCurrentSymbol)))
 		{
 			IDiaSymbol* rgelt = nullptr;
 			ULONG pceltFetched = 0;
 
 			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
 			{
-				CComPtr<IDiaSymbol> pChildSymbol(rgelt);
-				
-				BOOL isFunction = FALSE;
-				pChildSymbol->get_function(&isFunction);
-
-				if (!isFunction)
-					continue;
+				CComPtr<IDiaSymbol> pFunction(rgelt);
+				HRESULT result = 0;
 
 				USYM::FunctionSymbol& symbol = aUsym.functionSymbols.emplace_back();
 
 				DWORD id = 0;
-				pChildSymbol->get_symIndexId(&id);
+				pFunction->get_symIndexId(&id);
 				symbol.id = id;
 
-				symbol.name = GetNameFromSymbol(pChildSymbol);
+				symbol.name = GetNameFromSymbol(pFunction);
+
+				IDiaSymbol* pFunctionType = nullptr;
+				pFunction->get_type(&pFunctionType);
+				if (!pFunctionType)
+				{
+					spdlog::warn("No function type for {}, skipping...", symbol.name);
+					continue;
+				}
+
+				IDiaSymbol* pReturnType = nullptr;
+				result = pFunctionType->get_type(&pReturnType);
+
+				if (pReturnType && result == S_OK)
+				{
+					DWORD returnTypeId = 0;
+					result = pReturnType->get_symIndexId(&returnTypeId);
+					if (result == S_OK)
+						symbol.returnTypeId = returnTypeId;
+				}
 
 				DWORD argumentCount = 0;
-				pChildSymbol->get_count(&argumentCount);
-				symbol.argumentCount = argumentCount;
+				result = pFunctionType->get_count(&argumentCount);
+				if (result == S_OK)
+					symbol.argumentCount = argumentCount;
+
+				DWORD callingConvention = 0;
+				result = pFunctionType->get_callingConvention(&callingConvention);
+				if (result == S_OK)
+				{
+					using CC = USYM::CallingConvention;
+					switch (callingConvention)
+					{
+					case CV_call_e::CV_CALL_NEAR_C:
+						symbol.callingConvention = CC::kNearC;
+						break;
+					case CV_call_e::CV_CALL_NEAR_FAST:
+						symbol.callingConvention = CC::kNearFast;
+						break;
+					case CV_call_e::CV_CALL_NEAR_STD:
+						symbol.callingConvention = CC::kNearStd;
+						break;
+					case CV_call_e::CV_CALL_NEAR_SYS:
+						symbol.callingConvention = CC::kNearSys;
+						break;
+					case CV_call_e::CV_CALL_THISCALL:
+						symbol.callingConvention = CC::kThiscall;
+						break;
+					case CV_call_e::CV_CALL_CLRCALL:
+						symbol.callingConvention = CC::kCLRCall;
+						break;
+					default:
+						symbol.callingConvention = CC::kUnknown;
+					}
+				}
 			}
 		}
 	}
@@ -137,6 +182,7 @@ namespace DiaInterface
 			USYM usym{};
 
 			BuildUserDefinedTypeList(usym);
+			BuildFunctionList(usym);
 
 			return usym;
 		}

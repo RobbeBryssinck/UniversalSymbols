@@ -25,6 +25,7 @@ public:
 
 		kHeaderFailed,
 		kTypeSymbolsFailed,
+		kFunctionSymbolsFailed,
 	};
 
 	virtual ~ISerializer() = default;

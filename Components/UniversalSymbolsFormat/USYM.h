@@ -13,19 +13,36 @@ struct USYM
     uint32_t magic = 'MYSU';
   };
 
-  struct TypeSymbol
+  struct Symbol
   {
-    uint64_t id{};
+    uint32_t id{};
     std::string name{};
   };
 
-  struct FunctionSymbol
+  struct TypeSymbol : public Symbol
   {
-    uint64_t id{};
-    std::string name{};
-    std::optional<TypeSymbol> returnType{};
+  };
+
+  // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
+  // TODO: MS docs out of date, since there are a lot more values in CV_call_e?
+  enum class CallingConvention : uint32_t
+  {
+    kNearC = 0,
+    kNearFast,
+    kNearStd,
+    kNearSys,
+    kThiscall,
+    kCLRCall,
+
+    kUnknown = 0xFFFFFFFF,
+  };
+
+  struct FunctionSymbol : public Symbol
+  {
+    uint32_t returnTypeId{};
     int32_t argumentCount{};
-    std::vector<TypeSymbol> arguments{};
+    std::vector<uint32_t> argumentTypeIds{}; // TODO
+    CallingConvention callingConvention{ CallingConvention::kUnknown };
   };
 
   void SetSerializer(ISerializer::Type aType);

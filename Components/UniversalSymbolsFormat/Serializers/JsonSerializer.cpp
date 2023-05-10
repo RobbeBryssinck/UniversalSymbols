@@ -28,6 +28,9 @@ SR JsonSerializer::SerializeToFile()
 	if (!SerializeTypeSymbols())
 		return SR::kTypeSymbolsFailed;
 
+	if (!SerializeFunctionSymbols())
+		return SR::kFunctionSymbolsFailed;
+
 	std::ofstream file(targetFileName);
 	if (file.fail())
 		return SR::kFileCreationFailed;
@@ -46,7 +49,6 @@ bool JsonSerializer::SerializeHeader()
 
 bool JsonSerializer::SerializeTypeSymbols()
 {
-	// TODO: list
 	json typeSymbols = json::array();
 	for (const auto& typeSymbol : pUsym->typeSymbols)
 	{
@@ -63,5 +65,20 @@ bool JsonSerializer::SerializeTypeSymbols()
 
 bool JsonSerializer::SerializeFunctionSymbols()
 {
+	json functionSymbols = json::array();
+	for (const auto& functionSymbol : pUsym->functionSymbols)
+	{
+		json symbol = json::object();
+		symbol["id"] = functionSymbol.id;
+		symbol["name"] = functionSymbol.name;
+		symbol["returnTypeId"] = functionSymbol.returnTypeId;
+		symbol["argumentCount"] = functionSymbol.argumentCount;
+		symbol["argumentTypeIds"] = functionSymbol.argumentTypeIds;
+		symbol["callingConvention"] = functionSymbol.callingConvention;
+		functionSymbols.push_back(symbol);
+	}
+
+	j["functionSymbols"] = functionSymbols;
+
 	return true;
 }
