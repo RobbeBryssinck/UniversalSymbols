@@ -1,0 +1,13 @@
+.vscode/
+.vs/
+
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+*.gch
+*.o
+
+build/
+Generated/
+Debug/
