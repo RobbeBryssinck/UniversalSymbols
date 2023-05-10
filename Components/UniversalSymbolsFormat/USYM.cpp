@@ -7,27 +7,27 @@
 
 void USYM::SetSerializer(ISerializer::Type aType)
 {
-	switch (aType)
-	{
-	case ISerializer::Type::kBinary:
-		pSerializer = std::make_unique<BinarySerializer>();
-		break;
-	case ISerializer::Type::kJson:
-		pSerializer = std::make_unique<JsonSerializer>();
-		break;
-	default:
-		throw std::runtime_error("No serializer for type found.");
-	}
+  switch (aType)
+  {
+  case ISerializer::Type::kBinary:
+    pSerializer = std::make_unique<BinarySerializer>();
+    break;
+  case ISerializer::Type::kJson:
+    pSerializer = std::make_unique<JsonSerializer>();
+    break;
+  default:
+    throw std::runtime_error("No serializer for type found.");
+  }
 }
 
 ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension)
 {
-	using SR = ISerializer::SerializeResult;
+  using SR = ISerializer::SerializeResult;
 
-	if (!pSerializer)
-		return SR::kSerializerUninitialized;
+  if (!pSerializer)
+    return SR::kSerializerUninitialized;
 
-	pSerializer->Setup(apOutputFileNoExtension, this);
+  pSerializer->Setup(apOutputFileNoExtension, this);
 
-	return pSerializer->SerializeToFile();
+  return pSerializer->SerializeToFile();
 }
