@@ -13,6 +13,7 @@ public:
 private:
 	bool SerializeHeader();
 	bool SerializeTypeSymbols();
+	bool SerializeFunctionSymbols();
 
 	nlohmann::json j = nlohmann::json({});
 };

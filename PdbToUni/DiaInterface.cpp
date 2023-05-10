@@ -52,7 +52,27 @@ namespace DiaInterface
 			throw std::runtime_error("get_globalScope failed.");
 	}
 
-	bool BuildUserDefinedTypeList(USYM& aUsym)
+	std::string GetNameFromSymbol(IDiaSymbol* apSymbol)
+	{
+		std::string name = "";
+
+		BSTR pwName = nullptr;
+		if (apSymbol->get_name(&pwName) == S_OK)
+		{
+			auto nameLen = (size_t)SysStringLen(pwName) + 1;
+			char* pName = new char[nameLen];
+			wcstombs(pName, pwName, nameLen);
+
+			name = pName;
+
+			delete[] pName;
+			SysFreeString(pwName);
+		}
+
+		return name;
+	}
+
+	void BuildUserDefinedTypeList(USYM& aUsym)
 	{
 		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
 		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagUDT, nullptr, nsNone, &pCurrentSymbol)))
@@ -70,24 +90,42 @@ namespace DiaInterface
 				pChildSymbol->get_symIndexId(&id);
 				symbol.id = id;
 
-				BSTR pwName = nullptr;
-				if (pChildSymbol->get_name(&pwName) == S_OK)
-				{
-					auto nameLen = (size_t)SysStringLen(pwName) + 1;
-					char* pName = new char[nameLen];
-					wcstombs(pName, pwName, nameLen);
-
-					symbol.name = pName;
-
-					delete[] pName;
-					SysFreeString(pwName);
-				}
-
-				spdlog::info("{}: {}", symbol.id, symbol.name);
+				symbol.name = GetNameFromSymbol(pChildSymbol);
 			}
 		}
+	}
 
-		return true;
+	void BuildFunctionList(USYM& aUsym)
+	{
+		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
+		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagPublicSymbol, nullptr, nsNone, &pCurrentSymbol)))
+		{
+			IDiaSymbol* rgelt = nullptr;
+			ULONG pceltFetched = 0;
+
+			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+			{
+				CComPtr<IDiaSymbol> pChildSymbol(rgelt);
+				
+				BOOL isFunction = FALSE;
+				pChildSymbol->get_function(&isFunction);
+
+				if (!isFunction)
+					continue;
+
+				USYM::FunctionSymbol& symbol = aUsym.functionSymbols.emplace_back();
+
+				DWORD id = 0;
+				pChildSymbol->get_symIndexId(&id);
+				symbol.id = id;
+
+				symbol.name = GetNameFromSymbol(pChildSymbol);
+
+				DWORD argumentCount = 0;
+				pChildSymbol->get_count(&argumentCount);
+				symbol.argumentCount = argumentCount;
+			}
+		}
 	}
 
 	std::optional<USYM> CreateUsymFromFile(const char* apFileName)

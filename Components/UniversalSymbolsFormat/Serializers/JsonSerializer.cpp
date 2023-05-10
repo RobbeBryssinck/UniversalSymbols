@@ -6,6 +6,7 @@
 #include <fstream>
 
 using SR = ISerializer::SerializeResult;
+using json = nlohmann::json;
 
 void JsonSerializer::Setup(const std::string& aTargetFileNameNoExtension, USYM* apUsym)
 {
@@ -46,11 +47,21 @@ bool JsonSerializer::SerializeHeader()
 bool JsonSerializer::SerializeTypeSymbols()
 {
 	// TODO: list
+	json typeSymbols = json::array();
 	for (const auto& typeSymbol : pUsym->typeSymbols)
 	{
-		j["id"] = typeSymbol.id;
-		j["name"] = typeSymbol.name;
+		json symbol = json::object();
+		symbol["id"] = typeSymbol.id;
+		symbol["name"] = typeSymbol.name;
+		typeSymbols.push_back(symbol);
 	}
 
+	j["typeSymbols"] = typeSymbols;
+
+	return true;
+}
+
+bool JsonSerializer::SerializeFunctionSymbols()
+{
 	return true;
 }
