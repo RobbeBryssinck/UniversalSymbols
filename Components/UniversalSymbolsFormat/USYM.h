@@ -21,6 +21,7 @@ struct USYM
 
   struct TypeSymbol : public Symbol
   {
+    uint64_t length{};
   };
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
@@ -40,7 +41,7 @@ struct USYM
   struct FunctionSymbol : public Symbol
   {
     uint32_t returnTypeId{};
-    int32_t argumentCount{};
+    uint32_t argumentCount{};
     std::vector<uint32_t> argumentTypeIds{}; // TODO
     CallingConvention callingConvention{ CallingConvention::kUnknown };
   };

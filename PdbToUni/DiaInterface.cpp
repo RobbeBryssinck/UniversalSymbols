@@ -91,6 +91,10 @@ namespace DiaInterface
 				symbol.id = id;
 
 				symbol.name = GetNameFromSymbol(pType);
+
+				ULONGLONG length = 0;
+				pType->get_length(&length);
+				symbol.length = length;
 			}
 		}
 	}

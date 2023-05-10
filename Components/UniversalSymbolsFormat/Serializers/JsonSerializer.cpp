@@ -55,6 +55,7 @@ bool JsonSerializer::SerializeTypeSymbols()
 		json symbol = json::object();
 		symbol["id"] = typeSymbol.id;
 		symbol["name"] = typeSymbol.name;
+		symbol["length"] = typeSymbol.length;
 		typeSymbols.push_back(symbol);
 	}
 
