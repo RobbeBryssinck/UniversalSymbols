@@ -282,6 +282,7 @@ namespace ElfInterface
 
 		for (const auto& symbol : s_elf.symbols)
 		{
+			spdlog::info("{}", symbol.name);
 			if (symbol.IsTypeSymbol())
 			{
 				// TODO: do type processing

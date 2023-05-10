@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 {
   InitializeLogger();
 
-  auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\Users\Someone\Desktop\cvdump\rust_sample.pdb)");
+  auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\dev\rust_sample\target\debug\rust_sample.pdb)");
   if (!pUsymResult)
   {
     spdlog::error("Failed to load symbols from DIA.");

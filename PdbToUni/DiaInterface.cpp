@@ -8,12 +8,15 @@
 
 #include <stdexcept>
 #include <memory>
+#include <set>
 
 namespace DiaInterface
 {
 	static CComPtr<IDiaSession> s_pSession = nullptr;
 	static CComPtr<IDiaDataSource> s_pDataSource = nullptr;
 	static CComPtr<IDiaSymbol> s_pGlobalScopeSymbol = nullptr;
+
+	static std::set<uint32_t> s_symbolIndexIds{};
 
 	void Release()
 	{
@@ -72,6 +75,165 @@ namespace DiaInterface
 		return name;
 	}
 
+	std::string GetBaseName(BasicType aType, size_t aSize)
+	{
+		switch (aType)
+		{
+		case BasicType::btChar:
+			return "char";
+		case BasicType::btWChar:
+			return "wchar";
+		case BasicType::btInt:
+			switch (aSize)
+			{
+			case 1:
+				return "int8_t";
+			case 2:
+				return "int16_t";
+			case 4:
+				return "int32_t";
+			case 8:
+				return "int64_t";
+			default:
+				return "int";
+			}
+		case BasicType::btUInt:
+			switch (aSize)
+			{
+			case 1:
+				return "uint8_t";
+			case 2:
+				return "uint16_t";
+			case 4:
+				return "uint32_t";
+			case 8:
+				return "uint64_t";
+			default:
+				return "uint";
+			}
+		case BasicType::btFloat:
+			return "float";
+		case BasicType::btBool:
+			return "bool";
+		case BasicType::btLong:
+			return "long";
+		case BasicType::btULong:
+			return "unsigned long";
+		case BasicType::btChar8:
+			return "char8_t";
+		case BasicType::btChar16:
+			return "char16_t";
+		case BasicType::btChar32:
+			return "char32_t";
+		case BasicType::btVoid:
+		case BasicType::btBCD:
+		case BasicType::btCurrency:
+		case BasicType::btDate:
+		case BasicType::btComplex:
+		case BasicType::btBit:
+		case BasicType::btBSTR:
+		case BasicType::btHresult:
+		default:
+			return "void";
+		}
+	}
+
+	bool DoesSymbolExist(uint32_t aSymbolIndexId)
+	{
+		return s_symbolIndexIds.find(aSymbolIndexId) != s_symbolIndexIds.end();
+	}
+
+	std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
+	{
+		USYM::TypeSymbol symbol{};
+
+		DWORD id = 0;
+		apSymbol->get_symIndexId(&id);
+		symbol.id = id;
+
+		DWORD baseType = 0;
+		apSymbol->get_baseType(&baseType);
+
+		ULONGLONG size = 0;
+		apSymbol->get_length(&size);
+
+		symbol.name = GetBaseName(static_cast<BasicType>(baseType), size);
+
+		ULONGLONG length = 0;
+		apSymbol->get_length(&length);
+		symbol.length = length;
+
+		return symbol;
+	}
+
+	std::optional<USYM::TypeSymbol> CreateUDTSymbol(IDiaSymbol* apSymbol)
+	{
+		USYM::TypeSymbol symbol{};
+
+		DWORD id = 0;
+		apSymbol->get_symIndexId(&id);
+		symbol.id = id;
+
+		symbol.name = GetNameFromSymbol(apSymbol);
+
+		ULONGLONG length = 0;
+		apSymbol->get_length(&length);
+		symbol.length = length;
+
+		return symbol;
+	}
+
+	std::optional<USYM::TypeSymbol> CreateTypeSymbol(IDiaSymbol* apSymbol)
+	{
+		DWORD symTag = 0;
+		HRESULT result = apSymbol->get_symTag(&symTag);
+		if (result != S_OK)
+			return std::nullopt;
+
+		std::optional<USYM::TypeSymbol> symbol{};
+
+		switch (symTag)
+		{
+		case SymTagBaseType:
+			symbol = CreateBaseTypeSymbol(apSymbol);
+			break;
+		case SymTagUDT:
+			symbol = CreateUDTSymbol(apSymbol);
+			break;
+		default:
+			symbol = std::nullopt;
+		}
+
+		if (!symbol)
+			return std::nullopt;
+
+		s_symbolIndexIds.insert(symbol->id);
+
+		return symbol;
+	}
+
+	// TODO: duplicate symbols?
+	void BuildBaseTypeList(USYM& aUsym)
+	{
+		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
+		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagBaseType, nullptr, nsNone, &pCurrentSymbol)))
+		{
+			IDiaSymbol* rgelt = nullptr;
+			ULONG pceltFetched = 0;
+
+			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+			{
+				CComPtr<IDiaSymbol> pType(rgelt);
+
+				auto result = CreateTypeSymbol(pType);
+				if (!result)
+					spdlog::error("Failed to create base type symbol.");
+
+				aUsym.typeSymbols.push_back(*result);
+			}
+		}
+	}
+
 	void BuildUserDefinedTypeList(USYM& aUsym)
 	{
 		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
@@ -84,17 +246,11 @@ namespace DiaInterface
 			{
 				CComPtr<IDiaSymbol> pType(rgelt);
 
-				USYM::TypeSymbol& symbol = aUsym.typeSymbols.emplace_back();
+				auto result = CreateTypeSymbol(pType);
+				if (!result)
+					spdlog::error("Failed to create user defined type symbol.");
 
-				DWORD id = 0;
-				pType->get_symIndexId(&id);
-				symbol.id = id;
-
-				symbol.name = GetNameFromSymbol(pType);
-
-				ULONGLONG length = 0;
-				pType->get_length(&length);
-				symbol.length = length;
+				aUsym.typeSymbols.push_back(*result);
 			}
 		}
 	}
@@ -137,12 +293,46 @@ namespace DiaInterface
 					result = pReturnType->get_symIndexId(&returnTypeId);
 					if (result == S_OK)
 						symbol.returnTypeId = returnTypeId;
+
+					if (!DoesSymbolExist(returnTypeId))
+					{
+						//spdlog::error("Unknown return type");
+					}
 				}
 
 				DWORD argumentCount = 0;
 				result = pFunctionType->get_count(&argumentCount);
 				if (result == S_OK)
 					symbol.argumentCount = argumentCount;
+
+				CComPtr<IDiaEnumSymbols> pEnumArgs = nullptr;
+				if (SUCCEEDED(pFunctionType->findChildren(SymTagFunctionArgType, nullptr, nsNone, &pEnumArgs)) && symbol.name == "rust_sample::test_func5")
+				{
+					IDiaSymbol* pCurrentArg = nullptr;
+					ULONG argNum = 0;
+
+					while (SUCCEEDED(pEnumArgs->Next(1, &pCurrentArg, &argNum)) && (argNum == 1))
+					{
+						CComPtr<IDiaSymbol> pCurrentArgManaged(pCurrentArg);
+
+						IDiaSymbol* pArgumentType = nullptr;
+						pCurrentArgManaged->get_type(&pArgumentType);
+						
+						DWORD argTypeId = 0;
+						pArgumentType->get_symIndexId(&argTypeId);
+
+						if (!DoesSymbolExist(argTypeId))
+						{
+							auto result = CreateTypeSymbol(pArgumentType);
+							if (!result)
+								spdlog::error("Failed to create argument type symbol.");
+
+							aUsym.typeSymbols.push_back(*result);
+						}
+
+						symbol.argumentTypeIds.push_back(argTypeId);
+					}
+				}
 
 				DWORD callingConvention = 0;
 				result = pFunctionType->get_callingConvention(&callingConvention);
@@ -178,6 +368,8 @@ namespace DiaInterface
 				result = pFunction->get_addressOffset(&relativeVirtualAddress);
 				if (result == S_OK)
 					symbol.relativeVirtualAddress = relativeVirtualAddress;
+				
+				s_symbolIndexIds.insert(symbol.id);
 			}
 		}
 	}
@@ -219,6 +411,7 @@ namespace DiaInterface
 			USYM usym{};
 
 			BuildHeader(usym);
+			BuildBaseTypeList(usym);
 			BuildUserDefinedTypeList(usym);
 			BuildFunctionList(usym);
 
