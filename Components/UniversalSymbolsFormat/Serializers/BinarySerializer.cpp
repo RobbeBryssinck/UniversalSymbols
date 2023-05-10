@@ -31,7 +31,16 @@ bool BinarySerializer::SerializeTypeSymbols()
 	{
 		writer.Write(typeSymbol.id);
 		writer.WriteString(typeSymbol.name);
+		writer.Write(typeSymbol.type);
 		writer.Write(typeSymbol.length);
+		writer.Write(typeSymbol.memberVariableCount);
+
+		const size_t parameterCount = typeSymbol.memberVariableIds.size();
+		writer.Write(parameterCount);
+		for (const auto memberId : typeSymbol.memberVariableIds)
+		{
+			writer.Write(memberId);
+		}
 	}
 
 	return true;
