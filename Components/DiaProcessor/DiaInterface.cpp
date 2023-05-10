@@ -22,6 +22,8 @@ namespace DiaInterface
       s_pSession.Release();
     if (s_pDataSource)
       s_pDataSource.Release();
+    if (s_pGlobalScopeSymbol)
+      s_pGlobalScopeSymbol.Release();
 
     CoUninitialize();
   }
