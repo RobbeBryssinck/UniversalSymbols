@@ -299,6 +299,25 @@ namespace DiaInterface
     return symbol;
   }
 
+  std::optional<USYM::TypeSymbol> CreateArrayTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
+  {
+    USYM::TypeSymbol symbol{};
+
+    DWORD id = 0;
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
+    symbol.id = id;
+
+    symbol.name = GetNameFromSymbol(apSymbol);
+
+    ULONGLONG length = 0;
+    if (apSymbol->get_length(&length) != S_OK)
+      return std::nullopt;
+    symbol.length = length;
+
+    return symbol;
+  }
+
   bool CreateTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     if (!apSymbol)
@@ -327,6 +346,9 @@ namespace DiaInterface
       break;
     case SymTagTypedef:
       symbol = CreateTypedefSymbol(aUsym, apSymbol);
+      break;
+    case SymTagArrayType:
+      symbol = CreateArrayTypeSymbol(aUsym, apSymbol);
       break;
     default:
       symbol = std::nullopt;
