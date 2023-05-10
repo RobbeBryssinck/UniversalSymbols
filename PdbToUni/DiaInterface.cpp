@@ -151,6 +151,8 @@ namespace DiaInterface
     return s_symbolIndexIds.find(aSymbolIndexId) != s_symbolIndexIds.end();
   }
 
+  bool CreateTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol);
+
   std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
@@ -174,7 +176,7 @@ namespace DiaInterface
     return symbol;
   }
 
-  std::optional<USYM::TypeSymbol> CreateUDTSymbol(IDiaSymbol* apSymbol)
+  std::optional<USYM::TypeSymbol> CreateUDTSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
 
@@ -189,6 +191,48 @@ namespace DiaInterface
     if (apSymbol->get_length(&length) != S_OK)
       return std::nullopt;
     symbol.length = length;
+
+    CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
+    if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
+    {
+      LONG memberCount = 0;
+      pMemberEnum->get_Count(&memberCount);
+      symbol.memberVariableCount = memberCount;
+      symbol.memberVariableIds.reserve(symbol.memberVariableCount);
+
+      IDiaSymbol* rgelt = nullptr;
+      ULONG pceltFetched = 0;
+
+      while (SUCCEEDED(pMemberEnum->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+      {
+        CComPtr<IDiaSymbol> pMember(rgelt);
+        HRESULT result = 0;
+
+        CComPtr<IDiaSymbol> pMemberType = nullptr;
+        result = pMember->get_type(&pMemberType);
+
+        if (result == S_OK && pMemberType)
+        {
+          DWORD memberTypeId = 0;
+          result = pMemberType->get_symIndexId(&memberTypeId);
+          if (result == S_OK)
+            symbol.memberVariableIds.push_back(memberTypeId);
+
+          if (!DoesSymbolExist(memberTypeId))
+          {
+            bool createMemberSymbolResult = CreateTypeSymbol(aUsym, pMemberType);
+            if (!createMemberSymbolResult)
+            {
+              DWORD symTag = 0;
+              pMemberType->get_symTag(&symTag);
+              spdlog::error("Failed to create member type symbol {}.", symTag);
+            }
+          }
+        }
+      }
+
+      assert(symbol.memberVariableCount == symbol.memberVariableIds.size());
+    }
 
     return symbol;
   }
@@ -231,9 +275,7 @@ namespace DiaInterface
     return symbol;
   }
 
-  std::optional<USYM::TypeSymbol> CreateTypeSymbol(IDiaSymbol* apSymbol);
-
-  std::optional<USYM::TypeSymbol> CreateTypedefSymbol(IDiaSymbol* apSymbol)
+  std::optional<USYM::TypeSymbol> CreateTypedefSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
 
@@ -247,7 +289,7 @@ namespace DiaInterface
     IDiaSymbol* pUnderlyingType = nullptr;
     if (apSymbol->get_type(&pUnderlyingType) != S_OK)
       return std::nullopt;
-    auto result = CreateTypeSymbol(pUnderlyingType);
+    auto result = CreateTypeSymbol(aUsym, pUnderlyingType);
 
     ULONGLONG length = 0;
     if (pUnderlyingType->get_length(&length) != S_OK)
@@ -257,15 +299,15 @@ namespace DiaInterface
     return symbol;
   }
 
-  std::optional<USYM::TypeSymbol> CreateTypeSymbol(IDiaSymbol* apSymbol)
+  bool CreateTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     if (!apSymbol)
-      return std::nullopt;
+      return false;
 
     DWORD symTag = 0;
     HRESULT result = apSymbol->get_symTag(&symTag);
     if (result != S_OK)
-      return std::nullopt;
+      return false;
 
     std::optional<USYM::TypeSymbol> symbol{};
 
@@ -275,7 +317,7 @@ namespace DiaInterface
       symbol = CreateBaseTypeSymbol(apSymbol);
       break;
     case SymTagUDT:
-      symbol = CreateUDTSymbol(apSymbol);
+      symbol = CreateUDTSymbol(aUsym, apSymbol);
       break;
     case SymTagEnum:
       symbol = CreateEnumSymbol(apSymbol);
@@ -284,18 +326,19 @@ namespace DiaInterface
       symbol = CreatePointerTypeSymbol(apSymbol);
       break;
     case SymTagTypedef:
-      symbol = CreateTypedefSymbol(apSymbol);
+      symbol = CreateTypedefSymbol(aUsym, apSymbol);
       break;
     default:
       symbol = std::nullopt;
     }
 
     if (!symbol)
-      return std::nullopt;
+      return false;
 
     s_symbolIndexIds.insert(symbol->id);
+    aUsym.typeSymbols.push_back(*symbol);
 
-    return symbol;
+    return true;
   }
 
   // TODO: duplicate symbols?
@@ -311,14 +354,12 @@ namespace DiaInterface
       {
         CComPtr<IDiaSymbol> pType(rgelt);
 
-        auto result = CreateTypeSymbol(pType);
+        bool result = CreateTypeSymbol(aUsym, pType);
         if (!result)
         {
           spdlog::error("Failed to create type symbol of type {}.", static_cast<int>(aType));
           continue;
         }
-
-        aUsym.typeSymbols.push_back(*result);
       }
     }
   }
@@ -364,15 +405,13 @@ namespace DiaInterface
 
           if (!DoesSymbolExist(returnTypeId))
           {
-            auto result = CreateTypeSymbol(pReturnType);
+            bool result = CreateTypeSymbol(aUsym, pReturnType);
             if (!result)
             {
               DWORD symTag = 0;
               pReturnType->get_symTag(&symTag);
               spdlog::error("Failed to create return type symbol {}.", symTag);
             }
-            else
-              aUsym.typeSymbols.push_back(*result);
           }
         }
 
@@ -399,14 +438,9 @@ namespace DiaInterface
 
             if (!DoesSymbolExist(argTypeId))
             {
-              auto result = CreateTypeSymbol(pArgumentType);
+              bool result = CreateTypeSymbol(aUsym, pArgumentType);
               if (!result)
                 spdlog::error("Failed to create argument type symbol.");
-              else
-              {
-                aUsym.typeSymbols.push_back(*result);
-                symbol.argumentTypeIds.push_back(argTypeId);
-              }
             }
           }
         }

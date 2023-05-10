@@ -48,6 +48,8 @@ struct USYM
     }
 
     uint64_t length{};
+    uint64_t memberVariableCount{};
+    std::vector<uint64_t> memberVariableIds{};
   };
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
