@@ -173,6 +173,11 @@ namespace DiaInterface
 						symbol.callingConvention = CC::kUnknown;
 					}
 				}
+
+				DWORD relativeVirtualAddress = 0;
+				result = pFunction->get_addressOffset(&relativeVirtualAddress);
+				if (result == S_OK)
+					symbol.relativeVirtualAddress = relativeVirtualAddress;
 			}
 		}
 	}

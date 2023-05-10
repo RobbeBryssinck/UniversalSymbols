@@ -60,6 +60,7 @@ bool JsonSerializer::SerializeFunctionSymbols()
 		symbol["argumentCount"] = functionSymbol.argumentCount;
 		symbol["argumentTypeIds"] = functionSymbol.argumentTypeIds;
 		symbol["callingConvention"] = functionSymbol.callingConvention;
+		symbol["relativeVirtualAddress"] = functionSymbol.relativeVirtualAddress;
 		functionSymbols.push_back(symbol);
 	}
 

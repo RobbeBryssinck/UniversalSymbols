@@ -44,6 +44,7 @@ struct USYM
     uint32_t argumentCount{};
     std::vector<uint32_t> argumentTypeIds{}; // TODO
     CallingConvention callingConvention{ CallingConvention::kUnknown };
+    size_t relativeVirtualAddress{};
   };
 
   void SetSerializer(ISerializer::Type aType);
