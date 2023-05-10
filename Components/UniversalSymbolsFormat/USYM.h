@@ -1,20 +1,22 @@
 #pragma once
 
-#include <Reader.h>
-#include <Writer.h>
+#include <memory>
+
+#include "Serializers/ISerializer.h"
 
 struct USYM
 {
   struct Header
   {
-    void Serialize(Writer& aWriter) const;
-    void Deserialize(Reader& aReader);
-
     uint32_t magic = 'MYSU';
   };
 
-  void Serialize(Writer& aWriter) const;
-  void Deserialize(Reader& aReader);
+  USYM() = delete;
+  USYM(ISerializer::Type aType);
+
+  ISerializer::SerializeResult Serialize();
+
+  std::unique_ptr<ISerializer> pSerializer;
 
   Header header{};
 };

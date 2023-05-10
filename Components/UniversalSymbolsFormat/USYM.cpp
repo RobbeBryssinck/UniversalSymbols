@@ -1,21 +1,33 @@
 #include "USYM.h"
 
-void USYM::Header::Serialize(Writer& aWriter) const
+#include "Serializers/BinarySerializer.h"
+#include "Serializers/JsonSerializer.h"
+
+#include <stdexcept>
+
+USYM::USYM(ISerializer::Type aType)
 {
-	aWriter.Write(magic);
+	switch (aType)
+	{
+	case ISerializer::Type::kBinary:
+		pSerializer = std::make_unique<BinarySerializer>();
+		break;
+	case ISerializer::Type::kJson:
+		pSerializer = std::make_unique<JsonSerializer>();
+		break;
+	default:
+		throw std::runtime_error("No serializer for type found.");
+	}
 }
 
-void USYM::Header::Deserialize(Reader& aReader)
+ISerializer::SerializeResult USYM::Serialize()
 {
-	aReader.Read(magic);
-}
+	using SR = ISerializer::SerializeResult;
 
-void USYM::Serialize(Writer& aWriter) const
-{
-	header.Serialize(aWriter);
-}
+	if (!pSerializer)
+		return SR::kSerializerUninitialized;
 
-void USYM::Deserialize(Reader& aReader)
-{
-	header.Deserialize(aReader);
+	pSerializer->Setup("test", this);
+
+	return pSerializer->SerializeToFile();
 }

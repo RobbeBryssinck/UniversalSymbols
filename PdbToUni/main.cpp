@@ -7,6 +7,8 @@
 #include <atlcomcli.h>
 #include <dia2.h>
 
+#include <UniversalSymbolsFormat/USYM.h>
+
 void InitializeLogger()
 {
   auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -20,6 +22,10 @@ int main(int argc, char* argv[])
 {
   InitializeLogger();
 
+  USYM usym = USYM(ISerializer::Type::kJson);
+  auto result = usym.Serialize();
+
+#if 0
   CoInitialize(NULL);
 
   CComPtr<IDiaDataSource> pSource;
@@ -75,4 +81,5 @@ int main(int argc, char* argv[])
   }
 
   CoUninitialize();
+#endif
 }
