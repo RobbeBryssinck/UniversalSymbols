@@ -5,6 +5,8 @@ namespace DiaInterface
 {
   void InitializeDia(const char* apFileName);
   void Release();
+
+  void BuildHeader(USYM& aUsym);
 }
 
 namespace
@@ -29,5 +31,13 @@ namespace
     DiaInterface::Release();
   }
 
-  //TEST_F(DiaInterfaceTest, CreateUsymFromFile)
+  TEST_F(DiaInterfaceTest, BuildHeader)
+  {
+    USYM usym{};
+    DiaInterface::BuildHeader(usym);
+
+    EXPECT_EQ(usym.header.magic, 'MYSU');
+    EXPECT_EQ(usym.header.originalFormat, USYM::OriginalFormat::kPdb);
+    EXPECT_EQ(usym.header.architecture, USYM::Architecture::kX86_64);
+  }
 }

@@ -250,11 +250,6 @@ namespace DiaInterface
       return std::nullopt;
     symbol.length = length;
 
-#if 0
-    if (symbol.name == "enum2$<core::result::Result<tuple$<>,core::fmt::Error> >::Err")
-      DebugBreak();
-#endif
-
     CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
     if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
     {
