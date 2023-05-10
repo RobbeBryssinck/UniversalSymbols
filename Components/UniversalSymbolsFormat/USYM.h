@@ -70,7 +70,7 @@ struct USYM
   {
     uint32_t returnTypeId{};
     uint32_t argumentCount{};
-    std::vector<uint32_t> argumentTypeIds{}; // TODO
+    std::vector<uint32_t> argumentTypeIds{};
     CallingConvention callingConvention{ CallingConvention::kUnknown };
     size_t virtualAddress{};
   };

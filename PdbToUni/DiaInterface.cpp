@@ -457,6 +457,7 @@ namespace DiaInterface
             
             DWORD argTypeId = 0;
             pArgumentType->get_symIndexId(&argTypeId);
+            symbol.argumentTypeIds.push_back(argTypeId);
 
             if (!DoesSymbolExist(argTypeId))
             {
@@ -466,6 +467,8 @@ namespace DiaInterface
             }
           }
         }
+
+        assert(symbol.argumentCount == symbol.argumentTypeIds.size());
 
         DWORD callingConvention = 0;
         result = pFunctionType->get_callingConvention(&callingConvention);
