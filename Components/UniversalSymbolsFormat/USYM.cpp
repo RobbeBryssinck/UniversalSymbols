@@ -96,6 +96,19 @@ void USYM::PurgeDuplicateTypes()
   });
 }
 
+const USYM::TypeSymbol& USYM::GetTypeSymbolByName(const char* apName)
+{
+  static const TypeSymbol _{};
+
+  for (const auto& [id, symbol] : typeSymbols)
+  {
+    if (symbol.name == apName)
+      return symbol;
+  }
+
+  return _;
+}
+
 // TODO: why are some return types null?
 bool USYM::VerifyTypeIds()
 {

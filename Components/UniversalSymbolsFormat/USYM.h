@@ -114,8 +114,9 @@ struct USYM
   };
 
   void SetSerializer(ISerializer::Type aType);
-
   ISerializer::SerializeResult Serialize(const char* apOutputFileNoExtension);
+
+  const TypeSymbol& GetTypeSymbolByName(const char* apName);
 
 private:
   void PurgeDuplicateTypes();

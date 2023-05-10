@@ -51,21 +51,10 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestUdtClassTypeSymbol)
   {
-    uint32_t typeSymbolId = 0;
+    const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestClass1");
 
-    for (const auto& [id, symbol] : pUsym->typeSymbols)
-    {
-      if (symbol.name == "TestClass1")
-      {
-        typeSymbolId = id;
-        break;
-      }
-    }
+    ASSERT_NE(typeSymbol.id, 0);
 
-    ASSERT_NE(typeSymbolId, 0);
-
-    const auto& typeSymbol = pUsym->typeSymbols[typeSymbolId];
-    EXPECT_EQ(typeSymbol.id, typeSymbolId);
     EXPECT_EQ(typeSymbol.name, "TestClass1");
     EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kClass);
     EXPECT_EQ(typeSymbol.length, 8);
@@ -91,21 +80,10 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestEnumTypeSymbols)
   {
-    uint32_t typeSymbolId = 0;
+    const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestEnum1");
 
-    for (const auto& [id, symbol] : pUsym->typeSymbols)
-    {
-      if (symbol.name == "TestEnum1")
-      {
-        typeSymbolId = id;
-        break;
-      }
-    }
+    ASSERT_NE(typeSymbol.id, 0);
 
-    ASSERT_NE(typeSymbolId, 0);
-
-    const auto& typeSymbol = pUsym->typeSymbols[typeSymbolId];
-    EXPECT_EQ(typeSymbol.id, typeSymbolId);
     EXPECT_EQ(typeSymbol.name, "TestEnum1");
     EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kEnum);
     EXPECT_EQ(typeSymbol.length, 4);
