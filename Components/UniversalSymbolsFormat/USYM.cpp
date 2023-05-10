@@ -31,16 +31,14 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
 
   pSerializer->Setup(apOutputFileNoExtension, this);
 
-  VerifyTypeIds();
-
   spdlog::info("Type symbol count before: {}", typeSymbols.size());
 
   PurgeDuplicateTypes();
 
   spdlog::info("Type symbol count after: {}", typeSymbols.size());
 
-  // TODO: write verification function that checks if all ids exist
-  VerifyTypeIds();
+  if (!VerifyTypeIds())
+    spdlog::critical("Some type ids are missing, check the logs above.");
 
   return pSerializer->SerializeToFile();
 }
