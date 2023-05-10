@@ -113,7 +113,7 @@ namespace DiaInterface
         return "uint";
       }
     case BasicType::btFloat:
-      return "float";
+      return aSize == 4 ? "float" : "double";
     case BasicType::btBool:
       return "bool";
     case BasicType::btLong:
