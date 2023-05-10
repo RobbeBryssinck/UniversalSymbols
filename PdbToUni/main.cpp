@@ -3,6 +3,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
+#include <Windows.h>
+#include <atlcomcli.h>
+#include <dia2.h>
+
 void InitializeLogger()
 {
   auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -15,5 +19,60 @@ void InitializeLogger()
 int main(int argc, char* argv[])
 {
   InitializeLogger();
-  spdlog::info("Hello world!");
+
+  CoInitialize(NULL);
+
+  CComPtr<IDiaDataSource> pSource;
+  auto hr = CoCreateInstance(CLSID_DiaSource,
+    NULL,
+    CLSCTX_INPROC_SERVER,
+    __uuidof(IDiaDataSource),
+    (void**)&pSource);
+
+  if (FAILED(hr))
+  {
+    spdlog::error("Could not CoCreate CLSID_DiaSource. Register msdia80.dll.");
+    exit(1);
+  }
+
+  wchar_t wszFilename[] = L"C:\\Users\\Someone\\Desktop\\cvdump\\rust_sample.pdb";
+  if (FAILED(pSource->loadDataFromPdb(wszFilename)))
+  {
+    if (FAILED(pSource->loadDataForExe(wszFilename, NULL, NULL)))
+    {
+      spdlog::error("loadDataFromPdb/Exe");
+      exit(1);
+    }
+  }
+
+  CComPtr<IDiaSession> psession;
+  if (FAILED(pSource->openSession(&psession)))
+  {
+    spdlog::error("openSession");
+    exit(1);
+  }
+
+  CComPtr<IDiaSymbol> pglobal;
+  if (FAILED(psession->get_globalScope(&pglobal)))
+  {
+    spdlog::error("get_globalScope");
+    exit(1);
+  }
+
+  CComPtr<IDiaEnumTables> pTables;
+  if (FAILED(psession->getEnumTables(&pTables)))
+  {
+    spdlog::error("getEnumTables");
+  }
+
+  spdlog::info("Hello World!");
+
+  ULONG celt;
+  CComPtr<IDiaTable> pTable;
+  while (SUCCEEDED(hr = pTables->Next(1, &pTable, &celt)) && celt == 1)
+  {
+    break;
+  }
+
+  CoUninitialize();
 }
