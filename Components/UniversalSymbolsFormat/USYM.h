@@ -91,3 +91,18 @@ public:
   std::unordered_map<uint32_t, TypeSymbol> typeSymbols{};
   std::unordered_map<uint32_t, FunctionSymbol> functionSymbols{};
 };
+
+namespace std
+{
+  template <> class hash<USYM::TypeSymbol>
+  {
+  public:
+    size_t operator()(const USYM::TypeSymbol& aSymbol) const
+    {
+      size_t symbolHash = hash<uint64_t>()(aSymbol.length) ^ hash<uint64_t>()(aSymbol.memberVariableCount);
+      for (auto memberVariableId : aSymbol.memberVariableIds)
+        symbolHash ^= hash<uint32_t>()(memberVariableId);
+      return symbolHash ^ hash<std::string>()(aSymbol.name);
+    }
+  };
+} // namespace std

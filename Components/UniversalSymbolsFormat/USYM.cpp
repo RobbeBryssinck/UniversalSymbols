@@ -31,7 +31,11 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
 
   pSerializer->Setup(apOutputFileNoExtension, this);
 
+  spdlog::info("Type symbol count before: {}", typeSymbols.size());
+
   PurgeDuplicateTypes();
+
+  spdlog::info("Type symbol count after: {}", typeSymbols.size());
 
   return pSerializer->SerializeToFile();
 }
@@ -39,13 +43,19 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
 void USYM::PurgeDuplicateTypes()
 {
   std::unordered_map<uint32_t, uint32_t> oldToNew{};
+  std::unordered_map<size_t, uint32_t> hashesToIds{};
 
-  for (const auto& [id1, symbol1] : typeSymbols)
+  for (const auto& [id, symbol] : typeSymbols)
   {
-    for (const auto& [id2, symbol2] : typeSymbols)
+    size_t hash = std::hash<USYM::TypeSymbol>()(symbol);
+    const auto fetchedId = hashesToIds.find(hash);
+    if (fetchedId != hashesToIds.end())
     {
-      if (symbol1 == symbol2 && id1 != id2 && !oldToNew.contains(id1) && !oldToNew.contains(id2))
-        oldToNew[id2] = id1;
+      oldToNew[id] = fetchedId->second;
+    }
+    else
+    {
+      hashesToIds[hash] = id;
     }
   }
 
