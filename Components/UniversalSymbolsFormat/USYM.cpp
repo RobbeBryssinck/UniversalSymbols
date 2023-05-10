@@ -20,14 +20,14 @@ void USYM::SetSerializer(ISerializer::Type aType)
 	}
 }
 
-ISerializer::SerializeResult USYM::Serialize()
+ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension)
 {
 	using SR = ISerializer::SerializeResult;
 
 	if (!pSerializer)
 		return SR::kSerializerUninitialized;
 
-	pSerializer->Setup("test", this);
+	pSerializer->Setup(apOutputFileNoExtension, this);
 
 	return pSerializer->SerializeToFile();
 }

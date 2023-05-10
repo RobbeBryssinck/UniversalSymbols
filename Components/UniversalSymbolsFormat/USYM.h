@@ -70,7 +70,7 @@ struct USYM
 
   void SetSerializer(ISerializer::Type aType);
 
-  ISerializer::SerializeResult Serialize();
+  ISerializer::SerializeResult Serialize(const char* apOutputFileNoExtension);
 
   std::unique_ptr<ISerializer> pSerializer = nullptr;
 
