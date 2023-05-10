@@ -9,7 +9,6 @@ project "DwarfToUni"
    {
       "../Components",
       "../Vendor/spdlog/include",
-      "../Libraries/RECore"
    }
 
    libdirs
@@ -19,3 +18,4 @@ project "DwarfToUni"
 
    links "UniversalSymbolsFormat"
    links "RECore"
+   links "ElfProcessor"

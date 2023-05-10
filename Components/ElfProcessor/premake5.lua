@@ -6,8 +6,15 @@ project "ElfProcessor"
 
    includedirs 
    {
+      "../",
       "../../Vendor/spdlog/include",
-      "../UniversalSymbolsFormat",
+      "../../Libraries/RECore"
+   }
+
+   libdirs
+   {
+      "../../Build/Bin/%{cfg.longname}"
    }
 
    links "UniversalSymbolsFormat"
+   links "RECore"

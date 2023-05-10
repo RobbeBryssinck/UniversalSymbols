@@ -4,7 +4,7 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 
 #include <UniversalSymbolsFormat/USYM.h>
-#include "ElfInterface.h"
+#include <ElfProcessor/ElfInterface.h>
 
 void InitializeLogger()
 {
