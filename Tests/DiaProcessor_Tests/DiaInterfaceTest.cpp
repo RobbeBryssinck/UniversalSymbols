@@ -1,12 +1,11 @@
 #include <gtest/gtest.h>
 #include <DiaProcessor/DiaInterface.h>
 
-#if 0
 namespace DiaInterface
 {
+  void InitializeDia(const char* apFileName);
   void Release();
 }
-#endif
 
 namespace
 {
