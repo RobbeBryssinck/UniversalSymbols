@@ -44,9 +44,14 @@ namespace
     EXPECT_EQ(pUsym->header.architecture, USYM::Architecture::kX86_64);
   }
 
-  TEST_F(DiaInterfaceTest, TestTypeSymbols)
+  TEST_F(DiaInterfaceTest, TestTypeSymbolCount)
   {
     ASSERT_EQ(pUsym->typeSymbols.size(), 1643);
+  }
+
+  TEST_F(DiaInterfaceTest, TestFunctionSymbolCount)
+  {
+    ASSERT_EQ(pUsym->functionSymbols.size(), 160);
   }
 
   TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)

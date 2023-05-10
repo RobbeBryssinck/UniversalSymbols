@@ -43,4 +43,13 @@ namespace
     const auto& typeSymbols = *typeSymbolsResult;
     ASSERT_EQ(typeSymbols.size(), 1435);
   }
+
+  TEST_F(JsonSerializerTest, TestFunctionSymbolCount)
+  {
+    auto functionSymbolsResult = pJson->find("functionSymbols");
+    ASSERT_NE(functionSymbolsResult, pJson->end());
+
+    const auto& functionSymbols = *functionSymbolsResult;
+    ASSERT_EQ(functionSymbols.size(), 160);
+  }
 }
