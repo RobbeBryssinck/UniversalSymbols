@@ -16,8 +16,6 @@ namespace DiaInterface
   static CComPtr<IDiaDataSource> s_pDataSource = nullptr;
   static CComPtr<IDiaSymbol> s_pGlobalScopeSymbol = nullptr;
 
-  static std::unordered_set<uint32_t> s_symbolIndexIds{};
-
   void Release()
   {
     if (s_pSession)
@@ -146,9 +144,9 @@ namespace DiaInterface
     return std::format("pUnk{}", s_counter);
   }
 
-  bool DoesSymbolExist(uint32_t aSymbolIndexId)
+  bool DoesSymbolExist(USYM& aUsym, uint32_t aSymbolIndexId)
   {
-    return s_symbolIndexIds.find(aSymbolIndexId) != s_symbolIndexIds.end();
+    return aUsym.typeSymbols.contains(aSymbolIndexId);
   }
 
   bool CreateTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol);
@@ -218,7 +216,7 @@ namespace DiaInterface
           if (result == S_OK)
             symbol.memberVariableIds.push_back(memberTypeId);
 
-          if (!DoesSymbolExist(memberTypeId))
+          if (!aUsym.typeSymbols.contains(memberTypeId))
           {
             bool createMemberSymbolResult = CreateTypeSymbol(aUsym, pMemberType);
             if (!createMemberSymbolResult)
@@ -357,8 +355,7 @@ namespace DiaInterface
     if (!symbol)
       return false;
 
-    s_symbolIndexIds.insert(symbol->id);
-    aUsym.typeSymbols.push_back(*symbol);
+    aUsym.typeSymbols[symbol->id] = *symbol;
 
     return true;
   }
@@ -398,10 +395,12 @@ namespace DiaInterface
         CComPtr<IDiaSymbol> pFunction(rgelt);
         HRESULT result = 0;
 
-        USYM::FunctionSymbol& symbol = aUsym.functionSymbols.emplace_back();
-
+        
         DWORD id = 0;
         pFunction->get_symIndexId(&id);
+        
+        USYM::FunctionSymbol& symbol = aUsym.functionSymbols[id];
+        
         symbol.id = id;
 
         symbol.name = GetNameFromSymbol(pFunction);
@@ -424,7 +423,7 @@ namespace DiaInterface
           if (result == S_OK)
             symbol.returnTypeId = returnTypeId;
 
-          if (!DoesSymbolExist(returnTypeId))
+          if (!aUsym.typeSymbols.contains(returnTypeId))
           {
             bool result = CreateTypeSymbol(aUsym, pReturnType);
             if (!result)
@@ -452,7 +451,7 @@ namespace DiaInterface
             pThis->get_symIndexId(&thisId);
             symbol.argumentTypeIds.push_back(thisId);
 
-            if (!DoesSymbolExist(thisId))
+            if (!aUsym.typeSymbols.contains(thisId))
             {
               bool result = CreateTypeSymbol(aUsym, pThis);
               if (!result)
@@ -491,7 +490,7 @@ namespace DiaInterface
               pArgumentType->get_symIndexId(&argTypeId);
               symbol.argumentTypeIds.push_back(argTypeId);
 
-              if (!DoesSymbolExist(argTypeId))
+              if (!aUsym.typeSymbols.contains(argTypeId))
               {
                 bool result = CreateTypeSymbol(aUsym, pArgumentType);
                 if (!result)
@@ -539,8 +538,6 @@ namespace DiaInterface
         result = pFunction->get_virtualAddress(&virtualAddress);
         if (result == S_OK)
           symbol.virtualAddress = virtualAddress;
-        
-        s_symbolIndexIds.insert(symbol.id);
       }
     }
   }

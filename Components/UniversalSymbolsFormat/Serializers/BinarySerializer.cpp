@@ -27,7 +27,7 @@ bool BinarySerializer::SerializeTypeSymbols()
 	const size_t symbolCount = pUsym->typeSymbols.size();
 	writer.Write(symbolCount);
 
-	for (const auto& typeSymbol : pUsym->typeSymbols)
+	for (const auto& [id, typeSymbol] : pUsym->typeSymbols)
 	{
 		writer.Write(typeSymbol.id);
 		writer.WriteString(typeSymbol.name);
@@ -42,7 +42,7 @@ bool BinarySerializer::SerializeFunctionSymbols()
 	const size_t symbolCount = pUsym->functionSymbols.size();
 	writer.Write(symbolCount);
 
-	for (const auto& functionSymbol : pUsym->functionSymbols)
+	for (const auto& [id, functionSymbol] : pUsym->functionSymbols)
 	{
 		writer.Write(functionSymbol.id);
 		writer.WriteString(functionSymbol.name);

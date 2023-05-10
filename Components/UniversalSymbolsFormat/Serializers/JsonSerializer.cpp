@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -35,29 +36,28 @@ bool JsonSerializer::SerializeHeader()
 
 bool JsonSerializer::SerializeTypeSymbols()
 {
-	json typeSymbols = json::array();
-	for (const auto& typeSymbol : pUsym->typeSymbols)
+	std::unordered_map<std::string, json> idJsonMap{};
+	for (const auto& [id, typeSymbol] : pUsym->typeSymbols)
 	{
-		json symbol = json::object();
+		json& symbol = idJsonMap[std::to_string(id)];
 		symbol["id"] = typeSymbol.id;
 		symbol["name"] = typeSymbol.name;
 		symbol["length"] = typeSymbol.length;
 		symbol["memberVariableCount"] = typeSymbol.memberVariableCount;
 		symbol["memberVariableIds"] = typeSymbol.memberVariableIds;
-		typeSymbols.push_back(symbol);
 	}
 
-	j["typeSymbols"] = typeSymbols;
+	j["typeSymbols"] = idJsonMap;
 
 	return true;
 }
 
 bool JsonSerializer::SerializeFunctionSymbols()
 {
-	json functionSymbols = json::array();
-	for (const auto& functionSymbol : pUsym->functionSymbols)
+	std::unordered_map<std::string, json> idJsonMap{};
+	for (const auto& [id, functionSymbol] : pUsym->functionSymbols)
 	{
-		json symbol = json::object();
+		json& symbol = idJsonMap[std::to_string(id)];
 		symbol["id"] = functionSymbol.id;
 		symbol["name"] = functionSymbol.name;
 		symbol["returnTypeId"] = functionSymbol.returnTypeId;
@@ -65,10 +65,9 @@ bool JsonSerializer::SerializeFunctionSymbols()
 		symbol["argumentTypeIds"] = functionSymbol.argumentTypeIds;
 		symbol["callingConvention"] = functionSymbol.callingConvention;
 		symbol["virtualAddress"] = functionSymbol.virtualAddress;
-		functionSymbols.push_back(symbol);
 	}
 
-	j["functionSymbols"] = functionSymbols;
+	j["functionSymbols"] = idJsonMap;
 
 	return true;
 }

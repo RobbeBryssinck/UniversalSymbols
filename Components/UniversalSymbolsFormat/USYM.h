@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <unordered_map>
 
 struct USYM
 {
@@ -90,6 +91,6 @@ private:
 
 public:
   Header header{};
-  std::vector<TypeSymbol> typeSymbols{};
-  std::vector<FunctionSymbol> functionSymbols{};
+  std::unordered_map<uint32_t, TypeSymbol> typeSymbols{};
+  std::unordered_map<uint32_t, FunctionSymbol> functionSymbols{};
 };
