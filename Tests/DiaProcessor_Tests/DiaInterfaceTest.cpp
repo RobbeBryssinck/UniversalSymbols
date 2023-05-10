@@ -46,7 +46,7 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestTypeSymbols)
   {
-    ASSERT_EQ(pUsym->typeSymbols.size(), 1634);
+    ASSERT_EQ(pUsym->typeSymbols.size(), 1643);
   }
 
   TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)
@@ -134,5 +134,16 @@ namespace
 
     const auto& underlyingType = pUnderlyingType->second;
     EXPECT_EQ(underlyingType.type, USYM::TypeSymbol::Type::kPointer);
+  }
+
+  TEST_F(DiaInterfaceTest, TestFunctionSymbol)
+  {
+    const auto& functionSymbol = pUsym->GetFunctionSymbolByName("PrintTestClass");
+
+    ASSERT_NE(functionSymbol.id, 0);
+
+    EXPECT_EQ(functionSymbol.name, "PrintTestClass");
+    EXPECT_NE(functionSymbol.returnTypeId, 0);
+    EXPECT_EQ(functionSymbol.argumentCount, 1);
   }
 }

@@ -24,9 +24,16 @@ public:
   pInt p;
 };
 
+bool PrintTestClass(TestClass1* apTc1)
+{
+  std::cout << apTc1->t1.a << std::endl;
+  return true;
+}
+
 int main(int argc, char** argv)
 {
   TestClass1 tc1{};
   tc1.t1.a = kTestC;
-  std::cout << tc1.t1.a;
+  bool result = PrintTestClass(&tc1);
+  std::cout << result << std::endl;
 }

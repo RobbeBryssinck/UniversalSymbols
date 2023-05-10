@@ -96,17 +96,28 @@ void USYM::PurgeDuplicateTypes()
   });
 }
 
-const USYM::TypeSymbol& USYM::GetTypeSymbolByName(const char* apName)
+template <class T, class U>
+const T& GetSymbolByName(const char* apName, const U& aSymbols)
 {
-  static const TypeSymbol _{};
+  static const T _{};
 
-  for (const auto& [id, symbol] : typeSymbols)
+  for (const auto& [id, symbol] : aSymbols)
   {
     if (symbol.name == apName)
       return symbol;
   }
 
   return _;
+}
+
+const USYM::TypeSymbol& USYM::GetTypeSymbolByName(const char* apName) const
+{
+  return GetSymbolByName<TypeSymbol>(apName, typeSymbols);
+}
+
+const USYM::FunctionSymbol& USYM::GetFunctionSymbolByName(const char* apName) const
+{
+  return GetSymbolByName<FunctionSymbol>(apName, functionSymbols);
 }
 
 // TODO: why are some return types null?
