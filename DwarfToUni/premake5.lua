@@ -8,7 +8,8 @@ project "DwarfToUni"
    includedirs 
    {
       "../Components",
-      "../Vendor/spdlog/include"
+      "../Vendor/spdlog/include",
+      "../Libraries/RECore"
    }
 
    libdirs
@@ -17,3 +18,4 @@ project "DwarfToUni"
    }
 
    links "UniversalSymbolsFormat"
+   links "RECore"

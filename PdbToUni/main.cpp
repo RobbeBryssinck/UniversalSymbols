@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
   auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\Users\Someone\Desktop\cvdump\rust_sample.pdb)");
   if (!pUsymResult)
   {
-    spdlog::error("Failed to load symbol in DIA.");
+    spdlog::error("Failed to load symbols from DIA.");
     exit(1);
   }
 

@@ -3,6 +3,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
+#include "ElfInterface.h"
+
 void InitializeLogger()
 {
   auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -15,5 +17,16 @@ void InitializeLogger()
 int main(int argc, char* argv[])
 {
   InitializeLogger();
-  spdlog::info("Hello world!");
+
+  auto pUsymResult = ElfInterface::CreateUsymFromFile(R"(C:\Users\Someone\Desktop\linux_rust_sample\target\debug\rust_linux_sample)");
+  if (!pUsymResult)
+  {
+    spdlog::error("Failed to load USYM format from ELF binary.");
+    exit(1);
+  }
+
+  USYM& usym = pUsymResult.value();
+
+  usym.SetSerializer(ISerializer::Type::kJson);
+  auto result = usym.Serialize();
 }
