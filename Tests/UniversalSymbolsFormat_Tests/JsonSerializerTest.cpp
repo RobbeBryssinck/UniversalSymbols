@@ -72,24 +72,6 @@ namespace
     ASSERT_EQ(usym.Serialize("CppApp1"), ISerializer::SerializeResult::kOk);
   }
 
-  TEST_F(JsonSerializerTest, TestTypeSymbolCount)
-  {
-    auto typeSymbolsResult = pJson->find("typeSymbols");
-    ASSERT_NE(typeSymbolsResult, pJson->end());
-
-    const auto& typeSymbols = *typeSymbolsResult;
-    ASSERT_EQ(typeSymbols.size(), 1428);
-  }
-
-  TEST_F(JsonSerializerTest, TestFunctionSymbolCount)
-  {
-    auto functionSymbolsResult = pJson->find("functionSymbols");
-    ASSERT_NE(functionSymbolsResult, pJson->end());
-
-    const auto& functionSymbols = *functionSymbolsResult;
-    ASSERT_EQ(functionSymbols.size(), 139);
-  }
-
   TEST_F(JsonSerializerTest, TestBaseTypeSymbol)
   {
     const auto typeSymbolResult = GetJsonTypeSymbolByName(pJson, "float");

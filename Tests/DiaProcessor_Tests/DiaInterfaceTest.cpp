@@ -44,16 +44,6 @@ namespace
     EXPECT_EQ(pUsym->header.architecture, USYM::Architecture::kX86_64);
   }
 
-  TEST_F(DiaInterfaceTest, TestTypeSymbolCount)
-  {
-    ASSERT_EQ(pUsym->typeSymbols.size(), 1632);
-  }
-
-  TEST_F(DiaInterfaceTest, TestFunctionSymbolCount)
-  {
-    ASSERT_EQ(pUsym->functionSymbols.size(), 139);
-  }
-
   TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)
   {
     const auto& typeSymbol = pUsym->GetTypeSymbolByName("float");

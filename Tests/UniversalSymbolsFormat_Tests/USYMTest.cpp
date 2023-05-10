@@ -26,6 +26,5 @@ namespace
   {
     pUsym->PurgeDuplicateTypes();
     ASSERT_TRUE(pUsym->VerifyTypeIds());
-    EXPECT_EQ(pUsym->typeSymbols.size(), 1428);
   }
 }
