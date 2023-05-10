@@ -151,20 +151,22 @@ namespace DiaInterface
     return s_symbolIndexIds.find(aSymbolIndexId) != s_symbolIndexIds.end();
   }
 
-  // TODO: error checking for DIA functions
   std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
 
     DWORD id = 0;
-    apSymbol->get_symIndexId(&id);
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
     symbol.id = id;
 
     DWORD baseType = 0;
-    apSymbol->get_baseType(&baseType);
+    if (apSymbol->get_baseType(&baseType) != S_OK)
+      return std::nullopt;
 
     ULONGLONG size = 0;
-    apSymbol->get_length(&size);
+    if (apSymbol->get_length(&size) != S_OK)
+      return std::nullopt;
     symbol.length = size;
 
     symbol.name = GetBaseName(static_cast<BasicType>(baseType), size);
@@ -177,13 +179,15 @@ namespace DiaInterface
     USYM::TypeSymbol symbol{};
 
     DWORD id = 0;
-    apSymbol->get_symIndexId(&id);
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
     symbol.id = id;
 
     symbol.name = GetNameFromSymbol(apSymbol);
 
     ULONGLONG length = 0;
-    apSymbol->get_length(&length);
+    if (apSymbol->get_length(&length) != S_OK)
+      return std::nullopt;
     symbol.length = length;
 
     return symbol;
@@ -194,13 +198,15 @@ namespace DiaInterface
     USYM::TypeSymbol symbol{};
 
     DWORD id = 0;
-    apSymbol->get_symIndexId(&id);
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
     symbol.id = id;
 
     symbol.name = GetNameFromSymbol(apSymbol);
 
     ULONGLONG length = 0;
-    apSymbol->get_length(&length);
+    if (apSymbol->get_length(&length) != S_OK)
+      return std::nullopt;
     symbol.length = length;
 
     return symbol;
@@ -211,13 +217,15 @@ namespace DiaInterface
     USYM::TypeSymbol symbol{};
 
     DWORD id = 0;
-    apSymbol->get_symIndexId(&id);
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
     symbol.id = id;
 
     symbol.name = GeneratePointerName();
 
     ULONGLONG length = 0;
-    apSymbol->get_length(&length);
+    if (apSymbol->get_length(&length) != S_OK)
+      return std::nullopt;
     symbol.length = length;
 
     return symbol;
@@ -230,17 +238,20 @@ namespace DiaInterface
     USYM::TypeSymbol symbol{};
 
     DWORD id = 0;
-    apSymbol->get_symIndexId(&id);
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
     symbol.id = id;
 
     symbol.name = GeneratePointerName();
 
     IDiaSymbol* pUnderlyingType = nullptr;
-    apSymbol->get_type(&pUnderlyingType);
+    if (apSymbol->get_type(&pUnderlyingType) != S_OK)
+      return std::nullopt;
     auto result = CreateTypeSymbol(pUnderlyingType);
 
     ULONGLONG length = 0;
-    pUnderlyingType->get_length(&length);
+    if (pUnderlyingType->get_length(&length) != S_OK)
+      return std::nullopt;
     symbol.length = length;
 
     return symbol;
