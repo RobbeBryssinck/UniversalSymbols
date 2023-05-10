@@ -138,6 +138,13 @@ namespace DiaInterface
 		}
 	}
 
+	std::string GeneratePointerName()
+	{
+		static size_t s_counter = 0;
+		s_counter++;
+		return std::format("pUnk{}", s_counter);
+	}
+
 	bool DoesSymbolExist(uint32_t aSymbolIndexId)
 	{
 		return s_symbolIndexIds.find(aSymbolIndexId) != s_symbolIndexIds.end();
@@ -156,12 +163,9 @@ namespace DiaInterface
 
 		ULONGLONG size = 0;
 		apSymbol->get_length(&size);
+		symbol.length = size;
 
 		symbol.name = GetBaseName(static_cast<BasicType>(baseType), size);
-
-		ULONGLONG length = 0;
-		apSymbol->get_length(&length);
-		symbol.length = length;
 
 		return symbol;
 	}
@@ -200,6 +204,23 @@ namespace DiaInterface
 		return symbol;
 	}
 
+	std::optional<USYM::TypeSymbol> CreatePointerTypeSymbol(IDiaSymbol* apSymbol)
+	{
+		USYM::TypeSymbol symbol{};
+
+		DWORD id = 0;
+		apSymbol->get_symIndexId(&id);
+		symbol.id = id;
+
+		symbol.name = GeneratePointerName();
+
+		ULONGLONG length = 0;
+		apSymbol->get_length(&length);
+		symbol.length = length;
+
+		return symbol;
+	}
+
 	std::optional<USYM::TypeSymbol> CreateTypeSymbol(IDiaSymbol* apSymbol)
 	{
 		DWORD symTag = 0;
@@ -219,6 +240,9 @@ namespace DiaInterface
 			break;
 		case SymTagEnum:
 			symbol = CreateEnumSymbol(apSymbol);
+			break;
+		case SymTagPointerType:
+			symbol = CreatePointerTypeSymbol(apSymbol);
 			break;
 		default:
 			symbol = std::nullopt;
@@ -290,7 +314,28 @@ namespace DiaInterface
 
 				auto result = CreateTypeSymbol(pType);
 				if (!result)
-					spdlog::error("Failed to create user defined type symbol.");
+					spdlog::error("Failed to create enum symbol.");
+
+				aUsym.typeSymbols.push_back(*result);
+			}
+		}
+	}
+
+	void BuildPointerTypeList(USYM& aUsym)
+	{
+		CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
+		if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagPointerType, nullptr, nsNone, &pCurrentSymbol)))
+		{
+			IDiaSymbol* rgelt = nullptr;
+			ULONG pceltFetched = 0;
+
+			while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
+			{
+				CComPtr<IDiaSymbol> pType(rgelt);
+
+				auto result = CreateTypeSymbol(pType);
+				if (!result)
+					spdlog::error("Failed to create pointer type symbol.");
 
 				aUsym.typeSymbols.push_back(*result);
 			}
@@ -465,8 +510,8 @@ namespace DiaInterface
 			BuildBaseTypeList(usym);
 			BuildUserDefinedTypeList(usym);
 			BuildEnumTypeList(usym);
+			BuildPointerTypeList(usym);
 			BuildFunctionList(usym);
-			// TODO: enum and pointers
 			// TODO: reduce duplicates
 
 			return usym;
