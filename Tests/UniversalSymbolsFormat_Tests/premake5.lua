@@ -8,6 +8,7 @@ project "UniversalSymbolsFormat_Tests"
    includedirs
    {
       "../../Components",
+      "../../Vendor/json",
       "../../Vendor/googletest/include"
    }
 
