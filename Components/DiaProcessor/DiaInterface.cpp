@@ -190,28 +190,37 @@ namespace DiaInterface
     return symbol;
   }
 
-  std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
+  void SetAnonymousUnionData(USYM::TypeSymbol& aTypeSymbol)
   {
-    USYM::TypeSymbol symbol{};
-    symbol.type = USYM::TypeSymbol::Type::kBase;
+    auto count = aTypeSymbol.fields.size();
+    uint32_t unionId = 0;
+    bool wasLastUnion = false;
 
-    DWORD id = 0;
-    if (apSymbol->get_symIndexId(&id) != S_OK)
-      return std::nullopt;
-    symbol.id = id;
+    for (size_t i = 0; i < count; i++)
+    {
+      if (i + 1 == count)
+        break;
 
-    DWORD baseType = 0;
-    if (apSymbol->get_baseType(&baseType) != S_OK)
-      return std::nullopt;
+      auto& current = aTypeSymbol.fields[i];
+      if (current.id == 0)
+        continue;
 
-    ULONGLONG size = 0;
-    if (apSymbol->get_length(&size) != S_OK)
-      return std::nullopt;
-    symbol.length = size;
+      auto& next = aTypeSymbol.fields[i + 1];
+      if (next.id == 0)
+        continue;
 
-    symbol.name = GetBaseName(static_cast<BasicType>(baseType), size);
-
-    return symbol;
+      if (current.offset == next.offset)
+      {
+        current.isAnonymousUnion = next.isAnonymousUnion = true;
+        current.unionId = next.unionId = unionId;
+        wasLastUnion = true;
+      }
+      else if (wasLastUnion)
+      {
+        unionId++;
+        wasLastUnion = false;
+      }
+    }
   }
 
   void CreateMembersForSymbol(USYM& aUsym, IDiaSymbol* apSymbol, USYM::TypeSymbol& aTypeSymbol)
@@ -247,38 +256,32 @@ namespace DiaInterface
       assert(aTypeSymbol.fieldCount == aTypeSymbol.fields.size());
 
       if (aTypeSymbol.type != USYM::TypeSymbol::Type::kUnion && aTypeSymbol.type != USYM::TypeSymbol::Type::kEnum)
-      {
-        auto count = aTypeSymbol.fields.size();
-        uint32_t unionId = 0;
-        bool wasLastUnion = false;
-
-        for (size_t i = 0; i < count; i++)
-        {
-          if (i + 1 == count)
-            break;
-
-          auto& current = aTypeSymbol.fields[i];
-          if (current.id == 0)
-            continue;
-
-          auto& next = aTypeSymbol.fields[i + 1];
-          if (next.id == 0)
-            continue;
-
-          if (current.offset == next.offset)
-          {
-            current.isAnonymousUnion = next.isAnonymousUnion = true;
-            current.unionId = next.unionId = unionId;
-            wasLastUnion = true;
-          }
-          else if (wasLastUnion)
-          {
-            unionId++;
-            wasLastUnion = false;
-          }
-        }
-      }
+        SetAnonymousUnionData(aTypeSymbol);
     }
+  }
+
+  std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
+  {
+    USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kBase;
+
+    DWORD id = 0;
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
+    symbol.id = id;
+
+    DWORD baseType = 0;
+    if (apSymbol->get_baseType(&baseType) != S_OK)
+      return std::nullopt;
+
+    ULONGLONG size = 0;
+    if (apSymbol->get_length(&size) != S_OK)
+      return std::nullopt;
+    symbol.length = size;
+
+    symbol.name = GetBaseName(static_cast<BasicType>(baseType), size);
+
+    return symbol;
   }
 
   std::optional<USYM::TypeSymbol> CreateUDTSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
@@ -439,6 +442,8 @@ namespace DiaInterface
     if (apSymbol->get_symIndexId(&id) != S_OK)
       return false;
 
+    // TODO: currently, a previously defined type symbol is redefined.
+    // This behavior is probably unwanted.
     USYM::TypeSymbol& symbol = aUsym.typeSymbols[id];
 
     std::optional<USYM::TypeSymbol> symbolResult = std::nullopt;
