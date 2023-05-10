@@ -119,10 +119,10 @@ struct USYM
   const TypeSymbol& GetTypeSymbolByName(const char* apName) const;
   const FunctionSymbol& GetFunctionSymbolByName(const char* apName) const;
 
-private:
   void PurgeDuplicateTypes();
   bool VerifyTypeIds();
 
+private:
   std::unique_ptr<ISerializer> pSerializer = nullptr;
 
 public:

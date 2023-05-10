@@ -7,7 +7,7 @@ project "UniversalSymbolsFormat_Tests"
 
    includedirs
    {
-      "../../Components/UniversalSymbolsFormat",
+      "../../Components",
       "../../Vendor/googletest/include"
    }
 
@@ -18,3 +18,4 @@ project "UniversalSymbolsFormat_Tests"
 
    links "googletest"
    links "UniversalSymbolsFormat"
+   links "DiaProcessor"
