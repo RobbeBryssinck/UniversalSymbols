@@ -47,7 +47,7 @@ struct USYM
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
   // TODO: MS docs out of date, since there are a lot more values in CV_call_e?
-  enum class CallingConvention : uint32_t
+  enum class CallingConvention : uint8_t
   {
     kNearC = 0,
     kNearFast,
@@ -56,7 +56,7 @@ struct USYM
     kThiscall,
     kCLRCall,
 
-    kUnknown = 0xFFFFFFFF
+    kUnknown = 0xFF
   };
 
   struct FunctionSymbol : public Symbol
