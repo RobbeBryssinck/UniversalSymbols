@@ -6,7 +6,7 @@
 
 namespace
 {
-  std::optional<const nlohmann::json> GetJsonTypeSymbolByName(std::unique_ptr<const nlohmann::json>& apJson, const char* apName)
+  std::optional<const nlohmann::json> GetJsonTypeSymbolByName(std::shared_ptr<const nlohmann::json> apJson, const char* apName)
   {
     const auto& typeSymbols = *apJson->find("typeSymbols");
     
@@ -29,13 +29,13 @@ namespace
       usym.Serialize("CppApp1");
 
       std::ifstream f("CppApp1.json");
-      pJson = std::make_unique<nlohmann::json>(nlohmann::json::parse(f));
+      pJson = std::make_shared<nlohmann::json>(nlohmann::json::parse(f));
     }
 
-    static std::unique_ptr<const nlohmann::json> pJson;
+    static std::shared_ptr<const nlohmann::json> pJson;
   };
 
-  std::unique_ptr<const nlohmann::json> JsonSerializerTest::pJson = nullptr;
+  std::shared_ptr<const nlohmann::json> JsonSerializerTest::pJson = nullptr;
 
   TEST(JsonSerializer, SerializeToFile)
   {
@@ -77,36 +77,34 @@ namespace
     EXPECT_EQ(typeSymbol["length"], 4);
   }
 
-#if 0
   TEST_F(JsonSerializerTest, TestUdtClassTypeSymbol)
   {
-    const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestClass1");
+    const auto typeSymbolResult = GetJsonTypeSymbolByName(pJson, "TestClass1");
+    ASSERT_TRUE(typeSymbolResult.has_value());
 
-    ASSERT_NE(typeSymbol.id, 0);
+    const auto& typeSymbol = typeSymbolResult.value();
+    EXPECT_EQ(typeSymbol["name"], "TestClass1");
+    EXPECT_EQ(typeSymbol["type"], USYM::TypeSymbol::Type::kClass);
+    EXPECT_EQ(typeSymbol["length"], 16);
+    EXPECT_EQ(typeSymbol["fieldCount"], 2);
+    EXPECT_EQ(typeSymbol["typedefSource"], 0);
 
-    EXPECT_EQ(typeSymbol.name, "TestClass1");
-    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kClass);
-    EXPECT_EQ(typeSymbol.length, 8);
-    EXPECT_EQ(typeSymbol.fieldCount, 1);
-    EXPECT_EQ(typeSymbol.fieldCount, typeSymbol.fields.size());
-    EXPECT_EQ(typeSymbol.typedefSource, 0);
+    const auto& field = typeSymbol["fields"][0];
+    EXPECT_EQ(field["name"], "t1");
+    EXPECT_EQ(field["offset"], 0);
+    EXPECT_EQ(field["isAnonymousUnion"], false);
+    EXPECT_EQ(field["unionId"], 0);
 
-    const auto& field = typeSymbol.fields[0];
-    EXPECT_EQ(field.name, "t1");
-    EXPECT_EQ(field.underlyingTypeId, 62);
-    EXPECT_EQ(field.offset, 0);
-    EXPECT_EQ(field.isAnonymousUnion, false);
-    EXPECT_EQ(field.unionId, 0);
+    const auto underlyingTypeOfFieldResult = GetJsonTypeSymbolByName(pJson, field["underlyingTypeId"].get<std::string>().c_str());
+    ASSERT_TRUE(underlyingTypeOfFieldResult.has_value());
 
-    const auto pUnderlyingTypeOfField = pUsym->typeSymbols.find(field.underlyingTypeId);
-    ASSERT_NE(pUnderlyingTypeOfField, pUsym->typeSymbols.end());
-
-    const auto& underlyingTypeOfField = pUnderlyingTypeOfField->second;
-    EXPECT_EQ(underlyingTypeOfField.id, field.underlyingTypeId);
-    EXPECT_EQ(underlyingTypeOfField.name, "TestStruct1");
-    EXPECT_EQ(underlyingTypeOfField.fieldCount, 2);
+    const auto& underlyingTypeOfField = underlyingTypeOfFieldResult.value();
+    EXPECT_EQ(underlyingTypeOfField["id"], field["underlyingTypeId"]);
+    EXPECT_EQ(underlyingTypeOfField["name"], "TestStruct1");
+    EXPECT_EQ(underlyingTypeOfField["fieldCount"], 2);
   }
 
+#if 0
   TEST_F(JsonSerializerTest, TestEnumTypeSymbol)
   {
     const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestEnum1");

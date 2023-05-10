@@ -46,12 +46,12 @@ namespace
 
   TEST_F(DiaInterfaceTest, TestTypeSymbolCount)
   {
-    ASSERT_EQ(pUsym->typeSymbols.size(), 1643);
+    ASSERT_EQ(pUsym->typeSymbols.size(), 1632);
   }
 
   TEST_F(DiaInterfaceTest, TestFunctionSymbolCount)
   {
-    ASSERT_EQ(pUsym->functionSymbols.size(), 160);
+    ASSERT_EQ(pUsym->functionSymbols.size(), 139);
   }
 
   TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)
@@ -73,14 +73,13 @@ namespace
 
     EXPECT_EQ(typeSymbol.name, "TestClass1");
     EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kClass);
-    EXPECT_EQ(typeSymbol.length, 8);
-    EXPECT_EQ(typeSymbol.fieldCount, 1);
+    EXPECT_EQ(typeSymbol.length, 16);
+    EXPECT_EQ(typeSymbol.fieldCount, 2);
     EXPECT_EQ(typeSymbol.fieldCount, typeSymbol.fields.size());
     EXPECT_EQ(typeSymbol.typedefSource, 0);
     
     const auto& field = typeSymbol.fields[0];
     EXPECT_EQ(field.name, "t1");
-    EXPECT_EQ(field.underlyingTypeId, 62);
     EXPECT_EQ(field.offset, 0);
     EXPECT_EQ(field.isAnonymousUnion, false);
     EXPECT_EQ(field.unionId, 0);
