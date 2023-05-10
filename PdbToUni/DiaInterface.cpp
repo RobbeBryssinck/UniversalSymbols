@@ -391,6 +391,11 @@ namespace DiaInterface
       if (pUnderlyingType->get_length(&length) != S_OK)
         return std::nullopt;
       symbol.length = length;
+
+      DWORD typedefSource = 0;
+      if (pUnderlyingType->get_symIndexId(&typedefSource) != S_OK)
+        return std::nullopt;
+      symbol.typedefSource = typedefSource;
     }
 
     return symbol;

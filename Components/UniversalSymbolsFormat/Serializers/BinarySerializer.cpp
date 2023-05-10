@@ -46,6 +46,8 @@ bool BinarySerializer::SerializeTypeSymbols()
 			writer.Write(field.isAnonymousUnion);
 			writer.Write(field.unionId);
 		}
+
+		writer.Write(typeSymbol.typedefSource);
 	}
 
 	return true;

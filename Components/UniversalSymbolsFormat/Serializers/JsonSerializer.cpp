@@ -45,6 +45,7 @@ bool JsonSerializer::SerializeTypeSymbols()
 		symbol["type"] = typeSymbol.type;
 		symbol["length"] = typeSymbol.length;
 		symbol["fieldCount"] = typeSymbol.fieldCount;
+		symbol["typedefSource"] = typeSymbol.typedefSource;
 
 		json fields = json::array();
 		for (const auto& fieldSymbol : typeSymbol.fields)

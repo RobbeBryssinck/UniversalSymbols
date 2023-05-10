@@ -64,7 +64,8 @@ struct USYM
         length == aOther.length
         && fieldCount == aOther.fieldCount
         && name == aOther.name
-        && fields == aOther.fields;
+        && fields == aOther.fields
+        && typedefSource == aOther.typedefSource;
     }
 
     enum class Type : uint8_t
@@ -86,6 +87,7 @@ struct USYM
     uint64_t length{};
     uint64_t fieldCount{};
     std::vector<FieldSymbol> fields{};
+    uint32_t typedefSource{};
   };
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
