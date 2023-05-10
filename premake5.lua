@@ -23,7 +23,9 @@ workspace "UniversalSymbols"
    targetdir ("Build/Bin/%{cfg.longname}")
    objdir ("Build/Obj/%{cfg.longname}")
 
+include("Vendor")
 include("Libraries")
 include("Components")
 include("PdbToUni")
 include("DwarfToUni")
+include("Tests")

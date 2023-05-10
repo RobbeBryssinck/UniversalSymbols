@@ -4,7 +4,7 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 
 #include <UniversalSymbolsFormat/USYM.h>
-#include "DiaInterface.h"
+#include <DiaProcessor/DiaInterface.h>
 
 void InitializeLogger()
 {

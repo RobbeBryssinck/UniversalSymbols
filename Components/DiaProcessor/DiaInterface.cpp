@@ -694,6 +694,8 @@ namespace DiaInterface
 
       BuildFunctionList(usym);
 
+      Release();
+
       return usym;
     }
     catch (const std::exception& e)

@@ -9,15 +9,13 @@ project "PdbToUni"
    {
       "../Components",
       "../Vendor/spdlog/include",
-      "../Vendor/DIASDK/include"
    }
 
    libdirs
    {
-      "../Build/Bin/%{cfg.longname}",
-      "../Vendor/DIASDK/lib/amd64"
+      "../Build/Bin/%{cfg.longname}"
    }
 
    links "UniversalSymbolsFormat"
-   links "diaguids"
    links "RECore"
+   links "DiaProcessor"
