@@ -64,6 +64,10 @@ void USYM::PurgeDuplicateTypes()
 
   for (auto& [id, symbol] : typeSymbols)
   {
+    auto oldNewPair = oldToNew.find(symbol.typedefSource);
+    if (oldNewPair != oldToNew.end())
+      symbol.typedefSource = oldNewPair->second;
+
     for (auto& field : symbol.fields)
     {
       auto oldNewPair = oldToNew.find(field.underlyingTypeId);
@@ -117,6 +121,12 @@ bool USYM::VerifyTypeIds()
 
   for (const auto& [id, symbol] : typeSymbols)
   {
+    if (symbol.typedefSource != 0 && typeSymbols.find(symbol.typedefSource) == typeSymbols.end())
+    {
+      purity = false;
+      spdlog::warn("Typedef source of type {} not found: {}", id, symbol.typedefSource);
+    }
+    
     for (const auto& fieldSymbol : symbol.fields)
     {
       if (fieldSymbol.underlyingTypeId != 0 && typeSymbols.find(fieldSymbol.underlyingTypeId) == typeSymbols.end())
