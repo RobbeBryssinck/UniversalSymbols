@@ -42,6 +42,7 @@ bool JsonSerializer::SerializeTypeSymbols()
 		json& symbol = idJsonMap[std::to_string(id)];
 		symbol["id"] = typeSymbol.id;
 		symbol["name"] = typeSymbol.name;
+		symbol["type"] = typeSymbol.type;
 		symbol["length"] = typeSymbol.length;
 		symbol["memberVariableCount"] = typeSymbol.memberVariableCount;
 		symbol["memberVariableIds"] = typeSymbol.memberVariableIds;

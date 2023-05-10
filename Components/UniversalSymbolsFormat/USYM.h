@@ -49,6 +49,22 @@ struct USYM
         && memberVariableIds == aOther.memberVariableIds;
     }
 
+    enum class Type : uint8_t
+    {
+      kBase,
+      kStruct,
+      kClass,
+      kUnion,
+      kInterface,
+      kEnum,
+      kPointer,
+      kTypedef,
+      kArray,
+
+      kUnknown = 0xFF
+    };
+
+    Type type{ Type::kUnknown };
     uint64_t length{};
     uint64_t memberVariableCount{};
     std::vector<uint32_t> memberVariableIds{};

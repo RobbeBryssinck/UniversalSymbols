@@ -37,6 +37,8 @@ ISerializer::SerializeResult USYM::Serialize(const char* apOutputFileNoExtension
 
   spdlog::info("Type symbol count after: {}", typeSymbols.size());
 
+  // TODO: write verification function that checks if all ids exist
+
   return pSerializer->SerializeToFile();
 }
 

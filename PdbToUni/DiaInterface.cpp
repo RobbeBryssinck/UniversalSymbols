@@ -154,6 +154,7 @@ namespace DiaInterface
   std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kBase;
 
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
@@ -178,6 +179,28 @@ namespace DiaInterface
   {
     USYM::TypeSymbol symbol{};
 
+    DWORD udtKind = 0;
+    if (apSymbol->get_udtKind(&udtKind) != S_OK)
+      return std::nullopt;
+
+    switch (udtKind)
+    {
+    case UdtKind::UdtStruct:
+      symbol.type = USYM::TypeSymbol::Type::kStruct;
+      break;
+    case UdtKind::UdtClass:
+      symbol.type = USYM::TypeSymbol::Type::kClass;
+      break;
+    case UdtKind::UdtUnion:
+      symbol.type = USYM::TypeSymbol::Type::kUnion;
+      break;
+    case UdtKind::UdtInterface:
+      symbol.type = USYM::TypeSymbol::Type::kInterface;
+      break;
+    default:
+      symbol.type = USYM::TypeSymbol::Type::kUnknown;
+    }
+
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
       return std::nullopt;
@@ -189,6 +212,9 @@ namespace DiaInterface
     if (apSymbol->get_length(&length) != S_OK)
       return std::nullopt;
     symbol.length = length;
+
+    if (symbol.name == "enum2$<rust_args::TestEnum2>")
+      DebugBreak();
 
     CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
     if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
@@ -238,6 +264,7 @@ namespace DiaInterface
   std::optional<USYM::TypeSymbol> CreateEnumSymbol(IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kEnum;
 
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
@@ -257,6 +284,7 @@ namespace DiaInterface
   std::optional<USYM::TypeSymbol> CreatePointerTypeSymbol(IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kPointer;
 
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
@@ -276,6 +304,7 @@ namespace DiaInterface
   std::optional<USYM::TypeSymbol> CreateTypedefSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kTypedef;
 
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
@@ -309,6 +338,7 @@ namespace DiaInterface
   std::optional<USYM::TypeSymbol> CreateArrayTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
+    symbol.type = USYM::TypeSymbol::Type::kArray;
 
     DWORD id = 0;
     if (apSymbol->get_symIndexId(&id) != S_OK)
@@ -403,7 +433,6 @@ namespace DiaInterface
       {
         CComPtr<IDiaSymbol> pFunction(rgelt);
         HRESULT result = 0;
-
         
         DWORD id = 0;
         pFunction->get_symIndexId(&id);
