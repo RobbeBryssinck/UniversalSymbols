@@ -287,12 +287,21 @@ namespace DiaInterface
     IDiaSymbol* pUnderlyingType = nullptr;
     if (apSymbol->get_type(&pUnderlyingType) != S_OK)
       return std::nullopt;
-    auto result = CreateTypeSymbol(aUsym, pUnderlyingType);
 
-    ULONGLONG length = 0;
-    if (pUnderlyingType->get_length(&length) != S_OK)
-      return std::nullopt;
-    symbol.length = length;
+    DWORD symTag = 0;
+    pUnderlyingType->get_symTag(&symTag);
+
+    if (symTag == SymTagFunctionType)
+      symbol.length = 0;
+    else
+    {
+      auto result = CreateTypeSymbol(aUsym, pUnderlyingType);
+
+      ULONGLONG length = 0;
+      if (pUnderlyingType->get_length(&length) != S_OK)
+        return std::nullopt;
+      symbol.length = length;
+    }
 
     return symbol;
   }
