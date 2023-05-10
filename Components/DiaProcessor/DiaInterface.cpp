@@ -319,7 +319,7 @@ namespace DiaInterface
     return symbol;
   }
 
-  std::optional<USYM::TypeSymbol> CreateEnumSymbol(IDiaSymbol* apSymbol)
+  std::optional<USYM::TypeSymbol> CreateEnumSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
   {
     USYM::TypeSymbol symbol{};
     symbol.type = USYM::TypeSymbol::Type::kEnum;
@@ -428,36 +428,42 @@ namespace DiaInterface
     if (result != S_OK)
       return false;
 
-    std::optional<USYM::TypeSymbol> symbol{};
+    DWORD id = 0;
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return false;
+
+    USYM::TypeSymbol& symbol = aUsym.typeSymbols[id];
+
+    std::optional<USYM::TypeSymbol> symbolResult = std::nullopt;
 
     switch (symTag)
     {
     case SymTagBaseType:
-      symbol = CreateBaseTypeSymbol(apSymbol);
+      symbolResult = CreateBaseTypeSymbol(apSymbol);
       break;
     case SymTagUDT:
-      symbol = CreateUDTSymbol(aUsym, apSymbol);
+      symbolResult = CreateUDTSymbol(aUsym, apSymbol);
       break;
     case SymTagEnum:
-      symbol = CreateEnumSymbol(apSymbol);
+      symbolResult = CreateEnumSymbol(aUsym, apSymbol);
       break;
     case SymTagPointerType:
-      symbol = CreatePointerTypeSymbol(apSymbol);
+      symbolResult = CreatePointerTypeSymbol(apSymbol);
       break;
     case SymTagTypedef:
-      symbol = CreateTypedefSymbol(aUsym, apSymbol);
+      symbolResult = CreateTypedefSymbol(aUsym, apSymbol);
       break;
     case SymTagArrayType:
-      symbol = CreateArrayTypeSymbol(aUsym, apSymbol);
+      symbolResult = CreateArrayTypeSymbol(aUsym, apSymbol);
       break;
     default:
-      symbol = std::nullopt;
+      symbolResult = std::nullopt;
     }
 
-    if (!symbol)
+    if (!symbolResult)
       return false;
 
-    aUsym.typeSymbols[symbol->id] = *symbol;
+    symbol = symbolResult.value();
 
     return true;
   }
