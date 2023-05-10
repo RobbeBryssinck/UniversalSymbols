@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 class Writer final : public Buffer
 {
@@ -18,6 +19,7 @@ public:
   template <class T>
   bool Write(T& apSource)
   {
+    static_assert(std::is_trivial<T>::value);
     return WriteImpl(&apSource, sizeof(T));
   }
   bool WriteImpl(const void* apSource, const size_t acLength);

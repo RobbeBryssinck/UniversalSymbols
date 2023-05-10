@@ -7,12 +7,13 @@
 class BinarySerializer final : public ISerializer
 {
 public:
-	SerializeResult SerializeToFile() override;
 	void Setup(const std::string& aTargetFileNameNoExtension, USYM* apUsym) override;
 
-private:
-	bool SerializeHeader();
-	bool SerializeTypeSymbols();
+protected:
+	bool SerializeHeader() override;
+	bool SerializeTypeSymbols() override;
+	bool SerializeFunctionSymbols() override;
+	bool WriteToFile() override;
 
 	Writer writer{};
 };

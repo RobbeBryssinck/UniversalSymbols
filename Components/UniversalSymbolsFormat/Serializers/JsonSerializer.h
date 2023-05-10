@@ -7,13 +7,14 @@
 class JsonSerializer final : public ISerializer
 {
 public:
-	SerializeResult SerializeToFile() override;
 	void Setup(const std::string& aTargetFileNameNoExtension, USYM* apUsym) override;
 
-private:
-	bool SerializeHeader();
-	bool SerializeTypeSymbols();
-	bool SerializeFunctionSymbols();
+protected:
+	bool SerializeHeader() override;
+	bool SerializeTypeSymbols() override;
+	bool SerializeFunctionSymbols() override;
+	bool WriteToFile() override;
 
+private:
 	nlohmann::json j = nlohmann::json({});
 };

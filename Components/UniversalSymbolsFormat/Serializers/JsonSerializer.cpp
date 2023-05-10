@@ -5,7 +5,6 @@
 #include <filesystem>
 #include <fstream>
 
-using SR = ISerializer::SerializeResult;
 using json = nlohmann::json;
 
 void JsonSerializer::Setup(const std::string& aTargetFileNameNoExtension, USYM* apUsym)
@@ -14,30 +13,15 @@ void JsonSerializer::Setup(const std::string& aTargetFileNameNoExtension, USYM* 
 	pUsym = apUsym;
 }
 
-SR JsonSerializer::SerializeToFile()
+bool JsonSerializer::WriteToFile()
 {
-	if (targetFileName == "")
-		return SR::kNoTargetFile;
-
-	if (!pUsym)
-		return SR::kNoData;
-
-	if (!SerializeHeader())
-		return SR::kHeaderFailed;
-
-	if (!SerializeTypeSymbols())
-		return SR::kTypeSymbolsFailed;
-
-	if (!SerializeFunctionSymbols())
-		return SR::kFunctionSymbolsFailed;
-
 	std::ofstream file(targetFileName);
 	if (file.fail())
-		return SR::kFileCreationFailed;
+		return false;
 
 	file << std::setw(4) << j << std::endl;
 
-	return SR::kOk;
+	return true;
 }
 
 bool JsonSerializer::SerializeHeader()

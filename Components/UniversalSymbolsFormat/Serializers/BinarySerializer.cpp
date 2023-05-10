@@ -2,32 +2,15 @@
 
 #include "../USYM.h"
 
-using SR = ISerializer::SerializeResult;
-
 void BinarySerializer::Setup(const std::string& aTargetFileNameNoExtension, USYM* apUsym)
 {
 	targetFileName = aTargetFileNameNoExtension + ".usym";
 	pUsym = apUsym;
 }
 
-SR BinarySerializer::SerializeToFile()
+bool BinarySerializer::WriteToFile()
 {
-	if (targetFileName == "")
-		return SR::kNoTargetFile;
-
-	if (!pUsym)
-		return SR::kNoData;
-
-	if (!SerializeHeader())
-		return SR::kHeaderFailed;
-
-	if (!SerializeTypeSymbols())
-		return SR::kTypeSymbolsFailed;
-
-	if (!writer.WriteToFile(targetFileName))
-		return SR::kFileCreationFailed;
-
-	return SR::kOk;
+	return writer.WriteToFile(targetFileName);
 }
 
 bool BinarySerializer::SerializeHeader()
@@ -44,7 +27,34 @@ bool BinarySerializer::SerializeTypeSymbols()
 
 	for (const auto& typeSymbol : pUsym->typeSymbols)
 	{
-		writer.Write(typeSymbol);
+		writer.Write(typeSymbol.id);
+		writer.WriteString(typeSymbol.name);
+		writer.Write(typeSymbol.length);
+	}
+
+	return true;
+}
+
+bool BinarySerializer::SerializeFunctionSymbols()
+{
+	const size_t symbolCount = pUsym->functionSymbols.size();
+	writer.Write(symbolCount);
+
+	for (const auto& functionSymbol : pUsym->functionSymbols)
+	{
+		writer.Write(functionSymbol.id);
+		writer.WriteString(functionSymbol.name);
+		writer.Write(functionSymbol.returnTypeId);
+		writer.Write(functionSymbol.argumentCount);
+
+		const size_t argumentTypeIdCount = functionSymbol.argumentTypeIds.size();
+		writer.Write(argumentTypeIdCount);
+		for (const auto argumentTypeId : functionSymbol.argumentTypeIds)
+		{
+			writer.Write(argumentTypeId);
+		}
+
+		writer.Write(functionSymbol.callingConvention);
 	}
 
 	return true;
