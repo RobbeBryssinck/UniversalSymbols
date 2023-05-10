@@ -182,6 +182,34 @@ namespace DiaInterface
 		}
 	}
 
+	void BuildHeader(USYM& aUsym)
+	{
+		aUsym.header.originalFormat = USYM::OriginalFormat::kPdb;
+		
+		DWORD machineType = 0;
+		HRESULT result = s_pGlobalScopeSymbol->get_machineType(&machineType);
+		if (result == S_OK)
+		{
+			switch (machineType)
+			{
+			case IMAGE_FILE_MACHINE_I386: // TODO: not sure about this one
+				aUsym.header.architecture = USYM::Architecture::kX86;
+				break;
+			case IMAGE_FILE_MACHINE_AMD64:
+				aUsym.header.architecture = USYM::Architecture::kX86_64;
+				break;
+			case IMAGE_FILE_MACHINE_ARM:
+				aUsym.header.architecture = USYM::Architecture::kArm32;
+				break;
+			case IMAGE_FILE_MACHINE_ARM64:
+				aUsym.header.architecture = USYM::Architecture::kArm64;
+				break;
+			default:
+				aUsym.header.architecture = USYM::Architecture::kUnknown;
+			}
+		}
+	}
+
 	std::optional<USYM> CreateUsymFromFile(const char* apFileName)
 	{
 		try
@@ -190,6 +218,7 @@ namespace DiaInterface
 			
 			USYM usym{};
 
+			BuildHeader(usym);
 			BuildUserDefinedTypeList(usym);
 			BuildFunctionList(usym);
 

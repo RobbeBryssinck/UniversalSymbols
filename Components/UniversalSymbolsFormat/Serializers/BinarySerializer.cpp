@@ -16,6 +16,8 @@ bool BinarySerializer::WriteToFile()
 bool BinarySerializer::SerializeHeader()
 {
 	writer.Write(pUsym->header.magic);
+	writer.Write(pUsym->header.originalFormat);
+	writer.Write(pUsym->header.architecture);
 
 	return true;
 }

@@ -8,9 +8,29 @@
 
 struct USYM
 {
+  enum class OriginalFormat : uint8_t
+  {
+    kPdb = 0,
+    kDwarf,
+
+    kUnknown = 0xFF
+  };
+
+  enum class Architecture : uint8_t
+  {
+    kX86 = 0,
+    kX86_64,
+    kArm32,
+    kArm64,
+
+    kUnknown = 0xFF
+  };
+
   struct Header
   {
     uint32_t magic = 'MYSU';
+    OriginalFormat originalFormat{ OriginalFormat::kUnknown };
+    Architecture architecture{ Architecture::kUnknown };
   };
 
   struct Symbol
@@ -35,7 +55,7 @@ struct USYM
     kThiscall,
     kCLRCall,
 
-    kUnknown = 0xFFFFFFFF,
+    kUnknown = 0xFFFFFFFF
   };
 
   struct FunctionSymbol : public Symbol

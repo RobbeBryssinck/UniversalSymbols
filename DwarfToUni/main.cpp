@@ -28,5 +28,5 @@ int main(int argc, char* argv[])
   USYM& usym = pUsymResult.value();
 
   usym.SetSerializer(ISerializer::Type::kJson);
-  auto result = usym.Serialize();
+  //auto result = usym.Serialize();
 }

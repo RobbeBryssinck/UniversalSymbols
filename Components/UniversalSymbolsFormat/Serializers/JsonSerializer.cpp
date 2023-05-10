@@ -27,6 +27,8 @@ bool JsonSerializer::WriteToFile()
 bool JsonSerializer::SerializeHeader()
 {
 	j["magic"] = pUsym->header.magic;
+	j["originalFormat"] = pUsym->header.originalFormat;
+	j["architecture"] = pUsym->header.architecture;
 
 	return true;
 }
