@@ -2,9 +2,6 @@
 
 #include "Serializers/ISerializer.h"
 
-#include <memory>
-#include <optional>
-#include <vector>
 #include <unordered_map>
 
 struct USYM
