@@ -287,11 +287,10 @@ namespace DiaInterface
   }
 
   // TODO: duplicate symbols?
-  // TODO: symplify these builders, lots of duplicate code
-  void BuildBaseTypeList(USYM& aUsym)
+  void BuildTypeList(USYM& aUsym, enum SymTagEnum aType)
   {
     CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagBaseType, nullptr, nsNone, &pCurrentSymbol)))
+    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(aType, nullptr, nsNone, &pCurrentSymbol)))
     {
       IDiaSymbol* rgelt = nullptr;
       ULONG pceltFetched = 0;
@@ -303,104 +302,7 @@ namespace DiaInterface
         auto result = CreateTypeSymbol(pType);
         if (!result)
         {
-          spdlog::error("Failed to create base type symbol.");
-          continue;
-        }
-          
-        aUsym.typeSymbols.push_back(*result);
-      }
-    }
-  }
-
-  void BuildUserDefinedTypeList(USYM& aUsym)
-  {
-    CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagUDT, nullptr, nsNone, &pCurrentSymbol)))
-    {
-      IDiaSymbol* rgelt = nullptr;
-      ULONG pceltFetched = 0;
-
-      while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
-      {
-        CComPtr<IDiaSymbol> pType(rgelt);
-
-        auto result = CreateTypeSymbol(pType);
-        if (!result)
-        {
-          spdlog::error("Failed to create user defined type symbol.");
-          continue;
-        }
-
-        aUsym.typeSymbols.push_back(*result);
-      }
-    }
-  }
-
-  void BuildEnumTypeList(USYM& aUsym)
-  {
-    CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagEnum, nullptr, nsNone, &pCurrentSymbol)))
-    {
-      IDiaSymbol* rgelt = nullptr;
-      ULONG pceltFetched = 0;
-
-      while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
-      {
-        CComPtr<IDiaSymbol> pType(rgelt);
-
-        auto result = CreateTypeSymbol(pType);
-        if (!result)
-        {
-          spdlog::error("Failed to create enum symbol.");
-          continue;
-        }
-        
-        aUsym.typeSymbols.push_back(*result);
-      }
-    }
-  }
-
-  void BuildPointerTypeList(USYM& aUsym)
-  {
-    CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagPointerType, nullptr, nsNone, &pCurrentSymbol)))
-    {
-      IDiaSymbol* rgelt = nullptr;
-      ULONG pceltFetched = 0;
-
-      while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
-      {
-        CComPtr<IDiaSymbol> pType(rgelt);
-
-        auto result = CreateTypeSymbol(pType);
-        if (!result)
-        {
-          spdlog::error("Failed to create pointer type symbol.");
-          continue;
-        }
-        
-        aUsym.typeSymbols.push_back(*result);
-      }
-    }
-  }
-
-  // TODO: maybe call this before pointer?
-  void BuildTypedefList(USYM& aUsym)
-  {
-    CComPtr<IDiaEnumSymbols> pCurrentSymbol = nullptr;
-    if (SUCCEEDED(s_pGlobalScopeSymbol->findChildren(SymTagTypedef, nullptr, nsNone, &pCurrentSymbol)))
-    {
-      IDiaSymbol* rgelt = nullptr;
-      ULONG pceltFetched = 0;
-
-      while (SUCCEEDED(pCurrentSymbol->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
-      {
-        CComPtr<IDiaSymbol> pType(rgelt);
-
-        auto result = CreateTypeSymbol(pType);
-        if (!result)
-        {
-          spdlog::error("Failed to create typedef symbol.");
+          spdlog::error("Failed to create type symbol of type {}.", static_cast<int>(aType));
           continue;
         }
 
@@ -574,13 +476,15 @@ namespace DiaInterface
       USYM usym{};
 
       BuildHeader(usym);
-      BuildBaseTypeList(usym);
-      BuildUserDefinedTypeList(usym);
-      BuildEnumTypeList(usym);
-      BuildPointerTypeList(usym);
-      BuildTypedefList(usym);
-      BuildFunctionList(usym);
+
+      BuildTypeList(usym, SymTagBaseType);
+      BuildTypeList(usym, SymTagUDT);
+      BuildTypeList(usym, SymTagEnum);
+      BuildTypeList(usym, SymTagTypedef);
+      BuildTypeList(usym, SymTagPointerType);
       // TODO: reduce duplicates
+
+      BuildFunctionList(usym);
 
       return usym;
     }

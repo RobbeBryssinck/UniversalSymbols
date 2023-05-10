@@ -19,7 +19,12 @@ int main(int argc, char* argv[])
 {
   InitializeLogger();
 
-  auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\dev\rust_sample\target\debug\rust_sample.pdb)");
+  auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\Users\Someone\Desktop\rs-module-lexer-main\rs-module-lexer-main\target\debug\binding.pdb)");
+  //auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\dev\crafting_interpreters_rust\target\debug\crafting_interpreters_rust.pdb)");
+  //auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\dev\rust_sample\target\debug\rust_sample.pdb)");
+  //auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\Users\Someone\source\repos\TestApp1\x64\Debug\TestApp1.pdb)");
+  //auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\dev\rust_args\target\debug\rust_args.pdb)");
+
   if (!pUsymResult)
   {
     spdlog::error("Failed to load symbols from DIA.");
@@ -29,5 +34,9 @@ int main(int argc, char* argv[])
   USYM& usym = pUsymResult.value();
 
   usym.SetSerializer(ISerializer::Type::kJson);
-  auto result = usym.Serialize(R"(C:\Users\Someone\Desktop\cvdump\rust_sample)");
+  auto result = usym.Serialize(R"(C:\Users\Someone\Desktop\rs-module-lexer-main\rs-module-lexer-main\target\debug\binding)");
+  //auto result = usym.Serialize(R"(C:\dev\crafting_interpreters_rust\target\debug\crafting_interpreters_rust)");
+  //auto result = usym.Serialize(R"(C:\dev\rust_args\target\debug\rust_args)");
+  //auto result = usym.Serialize(R"(C:\Users\Someone\source\repos\TestApp1\x64\Debug\TestApp1)");
+  //auto result = usym.Serialize(R"(C:\Users\Someone\Desktop\cvdump\rust_sample)");
 }
