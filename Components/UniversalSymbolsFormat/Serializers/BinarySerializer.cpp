@@ -57,7 +57,7 @@ bool BinarySerializer::SerializeFunctionSymbols()
 		}
 
 		writer.Write(functionSymbol.callingConvention);
-		writer.Write(functionSymbol.relativeVirtualAddress);
+		writer.Write(functionSymbol.virtualAddress);
 	}
 
 	return true;

@@ -460,10 +460,10 @@ namespace DiaInterface
           }
         }
 
-        DWORD relativeVirtualAddress = 0;
-        result = pFunction->get_addressOffset(&relativeVirtualAddress);
+        ULONGLONG virtualAddress = 0;
+        result = pFunction->get_virtualAddress(&virtualAddress);
         if (result == S_OK)
-          symbol.relativeVirtualAddress = relativeVirtualAddress;
+          symbol.virtualAddress = virtualAddress;
         
         s_symbolIndexIds.insert(symbol.id);
       }
