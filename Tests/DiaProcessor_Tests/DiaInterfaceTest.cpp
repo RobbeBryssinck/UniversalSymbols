@@ -49,6 +49,17 @@ namespace
     ASSERT_EQ(pUsym->typeSymbols.size(), 1632);
   }
 
+  TEST_F(DiaInterfaceTest, TestBaseTypeSymbol)
+  {
+    const auto& typeSymbol = pUsym->GetTypeSymbolByName("float");
+
+    ASSERT_NE(typeSymbol.id, 0);
+
+    EXPECT_EQ(typeSymbol.name, "float");
+    EXPECT_EQ(typeSymbol.type, USYM::TypeSymbol::Type::kBase);
+    EXPECT_EQ(typeSymbol.length, 4);
+  }
+
   TEST_F(DiaInterfaceTest, TestUdtClassTypeSymbol)
   {
     const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestClass1");
@@ -78,7 +89,7 @@ namespace
     EXPECT_EQ(underlyingTypeOfField.fieldCount, 2);
   }
 
-  TEST_F(DiaInterfaceTest, TestEnumTypeSymbols)
+  TEST_F(DiaInterfaceTest, TestEnumTypeSymbol)
   {
     const auto& typeSymbol = pUsym->GetTypeSymbolByName("TestEnum1");
 
