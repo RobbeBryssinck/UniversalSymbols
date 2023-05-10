@@ -64,7 +64,8 @@ namespace DiaInterface
     {
       auto nameLen = (size_t)SysStringLen(pwName) + 1;
       char* pName = new char[nameLen];
-      wcstombs(pName, pwName, nameLen);
+      size_t convertedCount = 0;
+      wcstombs_s(&convertedCount, pName, nameLen, pwName, nameLen - 1); // -1 so the appended NULL doesn't fall outside the allocated buffer
 
       name = pName;
 
