@@ -32,7 +32,7 @@ struct USYM
 
   ISerializer::SerializeResult Serialize();
 
-  std::unique_ptr<ISerializer> pSerializer;
+  std::unique_ptr<ISerializer> pSerializer = nullptr;
 
   Header header{};
   std::vector<TypeSymbol> typeSymbols{};

@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-USYM::USYM(ISerializer::Type aType)
+void USYM::SetSerializer(ISerializer::Type aType)
 {
 	switch (aType)
 	{

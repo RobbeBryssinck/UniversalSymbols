@@ -45,6 +45,7 @@ bool JsonSerializer::SerializeHeader()
 
 bool JsonSerializer::SerializeTypeSymbols()
 {
+	// TODO: list
 	for (const auto& typeSymbol : pUsym->typeSymbols)
 	{
 		j["id"] = typeSymbol.id;

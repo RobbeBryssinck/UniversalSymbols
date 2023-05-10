@@ -3,11 +3,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
-#include <Windows.h>
-#include <atlcomcli.h>
-#include <dia2.h>
-
 #include <UniversalSymbolsFormat/USYM.h>
+#include "DiaInterface.h"
 
 void InitializeLogger()
 {
@@ -22,8 +19,17 @@ int main(int argc, char* argv[])
 {
   InitializeLogger();
 
-  USYM usym = USYM(ISerializer::Type::kJson);
-  auto result = usym.Serialize();
+  auto pUsymResult = DiaInterface::CreateUsymFromFile(R"(C:\Users\Someone\Desktop\cvdump\rust_sample.pdb)");
+  if (!pUsymResult)
+  {
+    spdlog::error("Failed to load symbol in DIA.");
+    exit(1);
+  }
+
+  USYM& usym = pUsymResult.value();
+
+  usym.SetSerializer(ISerializer::Type::kJson);
+  //auto result = usym.Serialize();
 
 #if 0
   CoInitialize(NULL);
