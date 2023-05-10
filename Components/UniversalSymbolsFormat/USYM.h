@@ -37,6 +37,24 @@ struct USYM
     std::string name{};
   };
 
+  struct FieldSymbol : public Symbol
+  {
+    bool operator==(const FieldSymbol& aOther) const
+    {
+      return
+        underlyingTypeId == aOther.underlyingTypeId
+        && offset == aOther.offset
+        && name == aOther.name
+        && isAnonymousUnion == aOther.isAnonymousUnion
+        && unionId == aOther.unionId;
+    }
+
+    uint32_t underlyingTypeId{};
+    size_t offset{};
+    bool isAnonymousUnion{};
+    uint32_t unionId{};
+  };
+
   // TODO: have child classes for TypeSymbol (enum, UDT, ptr, etc.), and assign them to different vectors
   struct TypeSymbol : public Symbol
   {
@@ -44,9 +62,9 @@ struct USYM
     {
       return
         length == aOther.length
-        && memberVariableCount == aOther.memberVariableCount
+        && fieldCount == aOther.fieldCount
         && name == aOther.name
-        && memberVariableIds == aOther.memberVariableIds;
+        && fields == aOther.fields;
     }
 
     enum class Type : uint8_t
@@ -66,8 +84,8 @@ struct USYM
 
     Type type{ Type::kUnknown };
     uint64_t length{};
-    uint64_t memberVariableCount{};
-    std::vector<uint32_t> memberVariableIds{};
+    uint64_t fieldCount{};
+    std::vector<FieldSymbol> fields{};
   };
 
   // https://learn.microsoft.com/en-us/visualstudio/debugger/debug-interface-access/cv-call-e?view=vs-2022
@@ -110,14 +128,24 @@ public:
 
 namespace std
 {
+  template <> class hash<USYM::FieldSymbol>
+  {
+  public:
+    size_t operator()(const USYM::FieldSymbol& aSymbol) const
+    {
+      // TODO: verify whether this works.
+      return hash<uint32_t>()(aSymbol.underlyingTypeId);
+    }
+  };
+
   template <> class hash<USYM::TypeSymbol>
   {
   public:
     size_t operator()(const USYM::TypeSymbol& aSymbol) const
     {
-      size_t symbolHash = hash<uint64_t>()(aSymbol.length) ^ hash<uint64_t>()(aSymbol.memberVariableCount);
-      for (auto memberVariableId : aSymbol.memberVariableIds)
-        symbolHash ^= hash<uint32_t>()(memberVariableId);
+      size_t symbolHash = hash<uint64_t>()(aSymbol.length) ^ hash<uint64_t>()(aSymbol.fieldCount);
+      for (const auto& field : aSymbol.fields)
+        symbolHash ^= hash<USYM::FieldSymbol>()(field);
       return symbolHash ^ hash<std::string>()(aSymbol.name);
     }
   };

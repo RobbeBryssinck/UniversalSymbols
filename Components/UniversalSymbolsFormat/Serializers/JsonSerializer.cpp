@@ -44,8 +44,21 @@ bool JsonSerializer::SerializeTypeSymbols()
 		symbol["name"] = typeSymbol.name;
 		symbol["type"] = typeSymbol.type;
 		symbol["length"] = typeSymbol.length;
-		symbol["memberVariableCount"] = typeSymbol.memberVariableCount;
-		symbol["memberVariableIds"] = typeSymbol.memberVariableIds;
+		symbol["fieldCount"] = typeSymbol.fieldCount;
+
+		json fields = json::array();
+		for (const auto& fieldSymbol : typeSymbol.fields)
+		{
+			json& fieldSymbolJson = fields.emplace_back();
+			fieldSymbolJson["id"] = fieldSymbol.id;
+			fieldSymbolJson["name"] = fieldSymbol.name;
+			fieldSymbolJson["underlyingTypeId"] = fieldSymbol.underlyingTypeId;
+			fieldSymbolJson["offset"] = fieldSymbol.offset;
+			fieldSymbolJson["isAnonymousUnion"] = fieldSymbol.isAnonymousUnion;
+			fieldSymbolJson["unionId"] = fieldSymbol.unionId;
+		}
+
+		symbol["fields"] = fields;
 	}
 
 	j["typeSymbols"] = idJsonMap;

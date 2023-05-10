@@ -144,12 +144,50 @@ namespace DiaInterface
     return std::format("pUnk{}", s_counter);
   }
 
-  bool DoesSymbolExist(USYM& aUsym, uint32_t aSymbolIndexId)
-  {
-    return aUsym.typeSymbols.contains(aSymbolIndexId);
-  }
-
   bool CreateTypeSymbol(USYM& aUsym, IDiaSymbol* apSymbol);
+
+  std::optional<USYM::FieldSymbol> CreateFieldSymbol(USYM& aUsym, IDiaSymbol* apSymbol)
+  {
+    USYM::FieldSymbol symbol{};
+
+    DWORD id = 0;
+    if (apSymbol->get_symIndexId(&id) != S_OK)
+      return std::nullopt;
+    symbol.id = id;
+
+    symbol.name = GetNameFromSymbol(apSymbol);
+
+    LONG offset{};
+    if (apSymbol->get_offset(&offset) != S_OK)
+      return std::nullopt;
+    symbol.offset = offset;
+
+    CComPtr<IDiaSymbol> pFieldType = nullptr;
+    if (apSymbol->get_type(&pFieldType) != S_OK || !pFieldType)
+      return std::nullopt;
+
+    DWORD fieldTypeId = 0;
+    if (pFieldType->get_symIndexId(&fieldTypeId) != S_OK)
+      return std::nullopt;
+
+    symbol.underlyingTypeId = fieldTypeId;
+    
+    if (!aUsym.typeSymbols.contains(fieldTypeId))
+    {
+      bool createFieldSymbolResult = CreateTypeSymbol(aUsym, pFieldType);
+      if (!createFieldSymbolResult)
+      {
+        DWORD symTag = 0;
+        pFieldType->get_symTag(&symTag);
+        spdlog::error("Failed to create field type symbol {}.", symTag);
+        return std::nullopt;
+      }
+    }
+
+    // isAnonymousUnion and unionId are not set yet on purpose, as it requires all fields to be defined first.
+
+    return symbol;
+  }
 
   std::optional<USYM::TypeSymbol> CreateBaseTypeSymbol(IDiaSymbol* apSymbol)
   {
@@ -213,49 +251,71 @@ namespace DiaInterface
       return std::nullopt;
     symbol.length = length;
 
-    if (symbol.name == "enum2$<rust_args::TestEnum2>")
+    if (symbol.name == "enum2$<rust_args::TestEnum2>::a")
       DebugBreak();
 
     CComPtr<IDiaEnumSymbols> pMemberEnum = nullptr;
     if (SUCCEEDED(apSymbol->findChildren(SymTagData, nullptr, nsNone, &pMemberEnum)))
     {
-      LONG memberCount = 0;
-      pMemberEnum->get_Count(&memberCount);
-      symbol.memberVariableCount = memberCount;
-      symbol.memberVariableIds.reserve(symbol.memberVariableCount);
+      LONG fieldCount = 0;
+      pMemberEnum->get_Count(&fieldCount);
+      symbol.fieldCount = fieldCount;
+      symbol.fields.reserve(symbol.fieldCount);
 
       IDiaSymbol* rgelt = nullptr;
       ULONG pceltFetched = 0;
 
       while (SUCCEEDED(pMemberEnum->Next(1, &rgelt, &pceltFetched)) && (pceltFetched == 1))
       {
-        CComPtr<IDiaSymbol> pMember(rgelt);
+        CComPtr<IDiaSymbol> pField(rgelt);
         HRESULT result = 0;
 
-        CComPtr<IDiaSymbol> pMemberType = nullptr;
-        result = pMember->get_type(&pMemberType);
-
-        if (result == S_OK && pMemberType)
+        auto pFieldSymbol = CreateFieldSymbol(aUsym, pField);
+        if (!pFieldSymbol)
         {
-          DWORD memberTypeId = 0;
-          result = pMemberType->get_symIndexId(&memberTypeId);
-          if (result == S_OK)
-            symbol.memberVariableIds.push_back(memberTypeId);
+          spdlog::error("Failed to create field symbol for object {}.", symbol.name);
+          // Push empty symbol to make sure the field count is still correct.
+          symbol.fields.push_back(USYM::FieldSymbol());
+          continue;
+        }
 
-          if (!aUsym.typeSymbols.contains(memberTypeId))
+        symbol.fields.push_back(*pFieldSymbol);
+      }
+
+      assert(symbol.fieldCount == symbol.fields.size());
+
+      if (symbol.type != USYM::TypeSymbol::Type::kUnion)
+      {
+        auto count = symbol.fields.size();
+        uint32_t unionId = 0;
+        bool wasLastUnion = false;
+
+        for (size_t i = 0; i < count; i++)
+        {
+          if (i + 1 == count)
+            break;
+
+          auto& current = symbol.fields[i];
+          if (current.id == 0)
+            continue;
+
+          auto& next = symbol.fields[i + 1];
+          if (next.id == 0)
+            continue;
+
+          if (current.offset == next.offset)
           {
-            bool createMemberSymbolResult = CreateTypeSymbol(aUsym, pMemberType);
-            if (!createMemberSymbolResult)
-            {
-              DWORD symTag = 0;
-              pMemberType->get_symTag(&symTag);
-              spdlog::error("Failed to create member type symbol {}.", symTag);
-            }
+            current.isAnonymousUnion = next.isAnonymousUnion = true;
+            current.unionId = next.unionId = unionId;
+            wasLastUnion = true;
+          }
+          else if (wasLastUnion)
+          {
+            unionId++;
+            wasLastUnion = false;
           }
         }
       }
-
-      assert(symbol.memberVariableCount == symbol.memberVariableIds.size());
     }
 
     return symbol;

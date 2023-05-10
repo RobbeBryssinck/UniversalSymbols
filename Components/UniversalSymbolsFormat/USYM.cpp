@@ -63,13 +63,13 @@ void USYM::PurgeDuplicateTypes()
 
   for (auto& [id, symbol] : typeSymbols)
   {
-    for (auto& memberId : symbol.memberVariableIds)
+    for (auto& field : symbol.fields)
     {
-      auto oldNewPair = oldToNew.find(memberId);
+      auto oldNewPair = oldToNew.find(field.underlyingTypeId);
       if (oldNewPair == oldToNew.end())
         continue;
 
-      memberId = oldNewPair->second;
+      field.underlyingTypeId = oldNewPair->second;
     }
   }
 

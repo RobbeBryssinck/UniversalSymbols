@@ -33,13 +33,18 @@ bool BinarySerializer::SerializeTypeSymbols()
 		writer.WriteString(typeSymbol.name);
 		writer.Write(typeSymbol.type);
 		writer.Write(typeSymbol.length);
-		writer.Write(typeSymbol.memberVariableCount);
+		writer.Write(typeSymbol.fieldCount);
 
-		const size_t parameterCount = typeSymbol.memberVariableIds.size();
+		const size_t parameterCount = typeSymbol.fields.size();
 		writer.Write(parameterCount);
-		for (const auto memberId : typeSymbol.memberVariableIds)
+		for (const auto& field : typeSymbol.fields)
 		{
-			writer.Write(memberId);
+			writer.Write(field.id);
+			writer.WriteString(field.name);
+			writer.Write(field.underlyingTypeId);
+			writer.Write(field.offset);
+			writer.Write(field.isAnonymousUnion);
+			writer.Write(field.unionId);
 		}
 	}
 
